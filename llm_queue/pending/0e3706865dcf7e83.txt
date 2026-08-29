@@ -1,0 +1,26 @@
+You are writing an evidence-based code-quality due-diligence report. Use ONLY the evidence below — do not invent facts not supported by it. Every concern or strength must reference the specific evidence it came from.
+
+Repository: repo_6
+
+Detected languages: [('cpp', 'cmake')]
+
+Build/test evidence: {"attempted": false, "reason": "No deep build/test support yet for detected language(s): ['cpp']. Static/dependency/activity checks still ran."}
+
+Dependency evidence: {"unpinned_count": 0, "total_declared": 0, "manifest_found": false, "manifest_type": null}
+
+Docker evidence: {"has_dockerfile": false, "has_compose": false, "build_attempted": false}
+
+Sampled file reviews: [{"readability": "Machine-generated C preprocessor configuration file (`pnglibconf.c`) containing dense `PNG_DFN` macro definitions.", "error_handling": "Relies on compile-time C preprocessor conditional directives (`#ifdef HAVE_CONFIG_H`, `#ifndef PNG_API_RULE`) rather than runtime error checks.", "concerns": ["Automated `pnglibconf.dfa` script output with `#define PNG_NO_SETJMP` macros that make manual editing or debugging difficult."], "notable_strengths": ["Comprehensive platform conditional compilation guards for `zlib` integration and Watcom calling conventions."], "file": "android\\app\\thirdparty_libs\\libpng\\lib\\pnglibconf.c"}, {"readability": "Android logging wrapper class (`L`) delegating log calls to `System.out.println` during debug builds.", "error_handling": "Accepts Exception arguments in logging methods (`i`, `w`, `e`) but discards exception stack traces.", "concerns": ["Swallows exception parameters entirely without printing stack trace details or delegating to Android `Log.e`."], "notable_strengths": ["Provides convenient static helper methods (`i`, `w`, `e`, `d`, `v`) reducing verbose logging boilerplate."], "file": "android\\debug\\org.coolreader.crengine.L.java"}, {"readability": "Native C signal interception library utilizing `sigaction` and `sigaltstack` for crash catching.", "error_handling": "Intercepts `SIGSEGV`, `SIGBUS`, and `SIGFPE` signals, restoring original signal handlers on cleanup.", "concerns": ["Uses signal-unsafe function calls inside signal handler routines."], "notable_strengths": ["Saves register state and stack traces into custom crash report structures."], "file": "android\\jni\\coffeecatch\\coffeecatch.c"}, {"readability": "JNI wrapper mapping CoffeeCatch signal handler functions to Android Java native methods.", "error_handling": "Checks JNI environment `env` pointer and surfaces C crash messages to Java strings.", "concerns": ["Manual string conversions between C `char*` and Java `jstring` without memory leak checks."], "notable_strengths": ["Allows Android applications to catch native C/C++ segmentation faults without crashing JVM."], "file": "android\\jni\\coffeecatch\\coffeejni.c"}, {"readability": "Clear C sample program (`sample.c`) demonstrating signal catching with `COFFEE_TRY` and `COFFEE_CATCH` macros.", "error_handling": "Catches hardware/segmentation faults via `coffeecatch_get_message()` and prints error details to `stderr` before calling `exit(EXIT_FAILURE)`.", "concerns": ["Intentional out-of-bounds array access in `recurse_madness` (`var[level]` where level is 42) used to trigger a deliberate fault."], "notable_strengths": ["Uses `snprintf` safely with fixed `string_buffer` size to prevent string buffer overflows during crash logging."], "file": "android\\jni\\coffeecatch\\sample.c"}]
+
+GitHub activity: {"error": null, "open_issue_count_sampled": 30, "recent_merge_count_sampled": 27}
+
+Score anchor — commit to a band, don't default to the middle:
+9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found
+7-8: Builds and mostly works, only minor gaps, no major red flags
+5-6: Some real risks present but core functionality is demonstrated
+3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths
+1-2: Fundamentally broken, unusable, or dangerous as evidenced
+Two repos with meaningfully different evidence should get meaningfully different scores — don't converge on a 'safe' middle number.
+
+Respond ONLY with JSON in exactly this shape:
+{"score": <int 1-10>, "summary": "<2-3 sentence overall verdict>", "strengths": [{"point": "...", "evidence": "..."}], "risks": [{"point": "...", "evidence": "..."}], "unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}

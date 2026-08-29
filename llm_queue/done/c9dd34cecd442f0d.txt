@@ -1,0 +1,1 @@
+{"readability": "Basic C++ program computing FCFS waiting times (`wt[i] = wt[i-1] + bt[i-1]`).", "error_handling": "No error checking on `cin >> n` input.", "concerns": ["Fixed array bound `bt[10]` causes buffer overflow if process count `n` exceeds 10."], "notable_strengths": ["Straightforward iterative calculation of cumulative waiting and turnaround times."]}

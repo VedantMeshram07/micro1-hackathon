@@ -6,8 +6,11 @@ file tree, README) that both the baseline and the agent build on.
 
 import os
 import shutil
+import stat
 import subprocess
+import sys
 import tempfile
+import time
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -33,6 +36,30 @@ LANGUAGE_MARKERS = {
 }
 
 README_NAMES = ["README.md", "README.rst", "README.txt", "README"]
+
+
+def _rmtree_force(path: str) -> None:
+    """shutil.rmtree that also clears Windows read-only bits and handles transient
+    Windows file locks with retries."""
+    def _clear_readonly(func, p, exc):
+        try:
+            os.chmod(p, stat.S_IWRITE)
+            func(p)
+        except Exception:
+            pass
+
+    for attempt in range(5):
+        try:
+            if sys.version_info >= (3, 12):
+                shutil.rmtree(path, onexc=_clear_readonly)
+            else:
+                shutil.rmtree(path, onerror=lambda f, p, ei: _clear_readonly(f, p, ei[1]))
+            return
+        except OSError:
+            if attempt < 4:
+                time.sleep(0.5 * (attempt + 1))
+            else:
+                raise
 
 
 @dataclass
@@ -83,18 +110,36 @@ def _clone_github(url: str, dest_root: str, pinned_commit: str | None) -> str:
     repo_name = url.rstrip("/").split("/")[-1].replace(".git", "")
     dest = os.path.join(dest_root, repo_name)
     if os.path.exists(dest):
-        shutil.rmtree(dest)
+        _rmtree_force(dest)
 
-    # Shallow clone by default — pin to a commit afterward if one was given,
-    # so eval-set repos never silently drift between runs.
-    subprocess.run(
-        ["git", "clone", "--depth", "50", url, dest],
-        check=True, capture_output=True, text=True, timeout=120,
-    )
+    # GIT_TERMINAL_PROMPT=0 stops git from trying to show an interactive
+    # credential prompt (common on Windows via Git Credential Manager, even
+    # for public repos that need no auth) — without it, a prompt attempt
+    # just hangs silently until the timeout, instead of failing fast with a
+    # clear error.
+    git_env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+
     if pinned_commit:
+        # Fetch the exact commit directly rather than shallow-cloning the
+        # branch tip and hoping the pin falls within that window — a
+        # --depth N clone of HEAD often won't include a pinned commit from
+        # further back in an active project's history (bit us on pydantic,
+        # whose pin was thousands of commits behind current HEAD).
+        os.makedirs(dest, exist_ok=True)
+        subprocess.run(["git", "init", "--quiet"], check=True, capture_output=True,
+                        text=True, cwd=dest, timeout=30, env=git_env)
+        subprocess.run(["git", "remote", "add", "origin", url], check=True,
+                        capture_output=True, text=True, cwd=dest, timeout=30, env=git_env)
+        subprocess.run(["git", "fetch", "--quiet", "--depth", "1", "origin", pinned_commit],
+                        check=True, capture_output=True, text=True, cwd=dest, timeout=180, env=git_env)
+        subprocess.run(["git", "checkout", "--quiet", "FETCH_HEAD"], check=True,
+                        capture_output=True, text=True, cwd=dest, timeout=30, env=git_env)
+    else:
+        # No pin given (e.g. live-ingest mode) — shallow clone of the branch
+        # tip is fine since we just want "whatever's current."
         subprocess.run(
-            ["git", "checkout", pinned_commit],
-            check=True, capture_output=True, text=True, cwd=dest, timeout=30,
+            ["git", "clone", "--depth", "50", url, dest],
+            check=True, capture_output=True, text=True, timeout=180, env=git_env,
         )
     return dest
 
@@ -103,7 +148,7 @@ def _extract_zip(zip_path: str, dest_root: str) -> str:
     name = Path(zip_path).stem
     dest = os.path.join(dest_root, name)
     if os.path.exists(dest):
-        shutil.rmtree(dest)
+        _rmtree_force(dest)
     os.makedirs(dest, exist_ok=True)
 
     with zipfile.ZipFile(zip_path) as zf:

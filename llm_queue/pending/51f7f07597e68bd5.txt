@@ -1,0 +1,254 @@
+Review this source file from an unfamiliar repository. File: src\js\snake.js
+
+```
+/*
+JavaScript Snake
+First version by Patrick Gillespie - I've since merged in a good number of github pull requests
+http://patorjk.com/games/snake
+*/
+
+/**
+ * @module Snake
+ * @class SNAKE
+ */
+
+// this will allow us to access the game in other JS files when the app is loaded up in a codesandbox.com sandbox, that's the only reason it's here
+if (!window.SNAKE) {
+  window.SNAKE = {};
+}
+
+/*
+    Direction explained (0 = up, etc etc)
+            0
+          3   1
+            2
+*/
+const MOVE_NONE = -1;
+const MOVE_UP = 0;
+const MOVE_LEFT = 3;
+const MOVE_DOWN = 2;
+const MOVE_RIGHT = 1;
+
+const MIN_SNAKE_SPEED = 25;
+const RUSH_INCR = 5;
+
+const DEFAULT_SNAKE_SPEED = 80;
+
+// On touch devices the snake moves a bit slower (more ms per move) for every
+// difficulty setting.
+const TOUCH_SPEED_FACTOR = 2;
+
+function adjustSpeedForDevice(speed) {
+  const isTouchDevice =
+    window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  return isTouchDevice ? Math.round(speed * TOUCH_SPEED_FACTOR) : speed;
+}
+
+const BOARD_NOT_READY = 0;
+const BOARD_READY = 1;
+const BOARD_IN_PLAY = 2;
+
+const HIGH_SCORE_KEY = "jsSnakeHighScore";
+
+/**
+ * @method addEventListener
+ * @param {Object} obj The object to add an event listener to.
+ * @param {String} event The event to listen for.
+ * @param {Function} funct The function to execute when the event is triggered.
+ * @param {Boolean} evtCapturing True to do event capturing, false to do event bubbling.
+ */
+SNAKE.addEventListener = (function () {
+  if (window.addEventListener) {
+    return function (obj, event, funct, evtCapturing) {
+      obj.addEventListener(event, funct, evtCapturing);
+    };
+  } else if (window.attachEvent) {
+    return function (obj, event, funct) {
+      obj.attachEvent("on" + event, funct);
+    };
+  }
+})();
+
+/**
+ * @method removeEventListener
+ * @param {Object} obj The object to remove an event listener from.
+ * @param {String} event The event that was listened for.
+ * @param {Function} funct The function that was executed when the event is triggered.
+ * @param {Boolean} evtCapturing True if event capturing was done, false otherwise.
+ */
+
+SNAKE.removeEventListener = (function () {
+  if (window.removeEventListener) {
+    return function (obj, event, funct, evtCapturing) {
+      obj.removeEventListener(event, funct, evtCapturing);
+    };
+  } else if (window.detachEvent) {
+    return function (obj, event, funct) {
+      obj.detachEvent("on" + event, funct);
+    };
+  }
+})();
+
+/**
+ * This class manages the snake which will reside inside of a SNAKE.Board object.
+ * @class Snake
+ * @constructor
+ * @namespace SNAKE
+ * @param {Object} config The configuration object for the class. Contains playingBoard (the SNAKE.Board that this snake resides in), startRow and startCol.
+ */
+SNAKE.Snake =
+  SNAKE.Snake ||
+  (function () {
+    // -------------------------------------------------------------------------
+    // Private static variables and methods
+    // -------------------------------------------------------------------------
+
+    const blockPool = [];
+
+    const SnakeBlock = function () {
+      this.elm = null;
+      this.elmStyle = null;
+      this.row = -1;
+      this.col = -1;
+      this.next = null;
+      this.prev = null;
+    };
+
+    // this function is adapted from the example at http://greengeckodesign.com/blog/2007/07/get-highest-z-index-in-javascript.html
+    function getNextHighestZIndex(myObj) {
+      let highestIndex = 0,
+        currentIndex = 0,
+        ii;
+      for (ii in myObj) {
+        if (myObj[ii].elm.currentStyle) {
+          currentIndex = parseFloat(myObj[ii].elm.style["z-index"], 10);
+        } else if (window.getComputedStyle) {
+          currentIndex = parseFloat(
+            document.defaultView
+              .getComputedStyle(myObj[ii].elm, null)
+              .getPropertyValue("z-index"),
+            10,
+          );
+        }
+        if (!isNaN(currentIndex) && currentIndex > highestIndex) {
+          highestIndex = currentIndex;
+        }
+      }
+      return highestIndex + 1;
+    }
+
+    // -------------------------------------------------------------------------
+    // Contructor + public and private definitions
+    // -------------------------------------------------------------------------
+
+    /*
+      config options:
+          playingBoard - the SnakeBoard that this snake belongs too.
+          startRow - The row the snake should start on.
+          startCol - The column the snake should start on.
+          moveSnakeWithAI - function to move the snake with AI
+  */
+    return function (config) {
+      if (!config || !config.playingBoard) {
+        return;
+      }
+      if (localStorage[HIGH_SCORE_KEY] === undefined)
+        localStorage.setItem(HIGH_SCORE_KEY, 0);
+
+      // ----- private variables -----
+
+      const me = this;
+      const playingBoard = config.playingBoard;
+      const growthIncr = 5;
+      const columnShift = [0, 1, 0, -1];
+      const rowShift = [-1, 0, 1, 0];
+      let prevNode;
+
+      let lastMove = 1,
+        preMove = MOVE_NONE,
+        isFirstGameMove = true,
+        currentDirection = MOVE_NONE, // 0: up, 1: left, 2: down, 3: right
+        snakeSpeed = adjustSpeedForDevice(DEFAULT_SNAKE_SPEED),
+        isDead = false,
+        isPaused = false;
+
+      const modeDropdown = document.getElementById("selectMode");
+      if (modeDropdown) {
+        modeDropdown.addEventListener("change", function (evt) {
+          evt = evt || {};
+          let val = evt.target
+            ? parseInt(evt.target.value)
+            : DEFAULT_SNAKE_SPEED;
+
+          if (isNaN(val)) {
+            val = DEFAULT_SNAKE_SPEED;
+          } else if (val < MIN_SNAKE_SPEED) {
+            val = DEFAULT_SNAKE_SPEED;
+          }
+
+          snakeSpeed = adjustSpeedForDevice(val);
+
+          setTimeout(function () {
+            document.getElementById("game-area").focus();
+          }, 10);
+        });
+      }
+
+      // ----- public variables -----
+      me.snakeBody = {};
+      me.snakeBody["b0"] = new SnakeBlock(); // create snake head
+      me.snakeBody["b0"].row = config.startRow || 1;
+      me.snakeBody["b0"].col = config.startCol || 1;
+      me.snakeBody["b0"].elm = createSnakeElement();
+      me.snakeBody["b0"].elmStyle = me.snakeBody["b0"].elm.style;
+      playingBoard.getBoardContainer().appendChild(me.snakeBody["b0"].elm);
+      me.snakeBody["b0"].elm.style.left = getLeftPosition(me.snakeBody["b0"]);
+      me.snakeBody["b0"].elm.style.top = getTopPosition(me.snakeBody["b0"]);
+      me.snakeBody["b0"].next = me.snakeBody["b0"];
+      me.snakeBody["b0"].prev = me.snakeBody["b0"];
+
+      me.snakeLength = 1;
+      me.snakeHead = me.snakeBody["b0"];
+      me.snakeTail = me.snakeBody["b0"];
+      me.snakeHead.elm.className = me.snakeHead.elm.className.replace(
+        /\bsnake-snakebody-dead\b/,
+        "",
+      );
+      me.snakeHead.elm.id = "snake-snakehead-alive";
+      me.snakeHead.elm.className += " snake-snakebody-alive";
+
+      // ----- private methods -----
+
+      function getTopPosition(block) {
+        const num = block.row * playingBoard.getBlockHeight();
+        return `${num}px`;
+      }
+
+      function getLeftPosition(block) {
+        const num = block.col * playingBoard.getBlockWidth();
+        return `${num}px`;
+      }
+
+      function createSnakeElement() {
+        const tempNode = document.createElement("div");
+        tempNode.className = "snake-snakebody-block";
+        tempNode.style.left = "-1000px";
+        tempNode.style.top = "-1000px";
+        tempNode.style.width = playingBoard.getBlockWidth() + "px";
+        tempNode.style.height = playingBoard.getBlockHeight() + "px";
+        return tempNode;
+      }
+
+      function createBlocks(num) {
+        let tempBlock;
+        const tempNode = createSnakeElement();
+
+        for (let ii = 1; ii < num; ii++) {
+          tempBlock = new SnakeBlock();
+          tempBlock.elm = tempNode.cloneNode(true);
+          tempBlock.elmStyle = tempBlock.elm.style;
+          playingBoard.getBoardContainer().appendChild(tempBlock.elm);
+     
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

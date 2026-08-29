@@ -1,0 +1,53 @@
+You are quickly skimming an unfamiliar code repository to form a first impression of its quality — the way a busy person glancing at it for two minutes would. You only have the README and the file tree. You have NOT run the code, the tests, or checked dependencies.
+
+Repository: repo_3
+
+README:
+---
+# process-scheduler
+Built a multiclient TCP server in C on Linux using socket programming. The server accepts multiple client connections and handles communication concurrently. This project helped me understand client–server architecture, TCP/IP communication, Linux system calls, and basic concurrency handling in networked applications.
+
+# Process Scheduling Simulator
+
+This project simulates the FCFS (First Come First Serve) scheduling algorithm.
+
+## Concepts Used
+- CPU scheduling
+- Waiting time
+- Turnaround time
+- Operating System fundamentals
+
+## How to Run
+g++ scheduler.cpp -o scheduler
+./scheduler
+
+# OS Scheduling Algorithms
+
+This repository contains implementations of classic CPU scheduling algorithms
+for learning Operating Systems concepts.
+
+## Implemented Algorithms
+- FCFS
+- Shortest Job First (SJF)
+- Priority Scheduling
+- Round Robin
+
+## Language
+- C++
+
+## Purpose
+Academic and learning project to understand CPU scheduling and performance trade-offs.
+
+
+---
+
+File tree (6 files):
+README.md
+comparison.md
+priority.cpp
+round_robin.cpp
+scheduler.cpp
+sjf.cpp
+
+Rate this repository's likely quality from 1 (poor) to 10 (excellent), based only on this surface-level impression. Respond ONLY with valid JSON, no other text, in exactly this shape:
+{"score": <int 1-10>, "reasoning": "<2-3 sentence gut-impression explanation>"}

@@ -1,0 +1,38 @@
+Review this source file from an unfamiliar repository. File: scheduler.cpp
+
+```
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n, bt[10], wt[10], tat[10];
+
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    for(int i = 0; i < n; i++) {
+        cout << "Enter burst time for process " << i+1 << ": ";
+        cin >> bt[i];
+    }
+
+    wt[0] = 0;
+    for(int i = 1; i < n; i++) {
+        wt[i] = wt[i-1] + bt[i-1];
+    }
+
+    for(int i = 0; i < n; i++) {
+        tat[i] = wt[i] + bt[i];
+    }
+
+    cout << "\nProcess\tBurst\tWaiting\tTurnaround\n";
+    for(int i = 0; i < n; i++) {
+        cout << "P" << i+1 << "\t" << bt[i] << "\t"
+             << wt[i] << "\t" << tat[i] << endl;
+    }
+
+    return 0;
+}
+
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

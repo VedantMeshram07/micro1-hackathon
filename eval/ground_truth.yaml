@@ -7,9 +7,9 @@
 # repos_manifest.yaml needs an entry here with a unique rank.
 
 rankings:
-  repo_1: null
-  repo_2: null
-  repo_3: null
-  repo_4: null
-  repo_5: null
-  repo_6: null
+  repo_1: 4
+  repo_2: 6
+  repo_3: 5
+  repo_4: 2
+  repo_5: 1
+  repo_6: 3

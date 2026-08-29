@@ -6,11 +6,9 @@ your agent needs to beat, so keep it honestly weak, not a strawman.
 """
 
 import json
-import os
-
-import anthropic
 
 from ingest.ingest import IngestResult
+from llm.client import LLMClient, parse_json_response
 
 BASELINE_PROMPT = """You are quickly skimming an unfamiliar code repository to \
 form a first impression of its quality — the way a busy person glancing at it \
@@ -34,7 +32,7 @@ text, in exactly this shape:
 """
 
 
-def baseline_rate(repo_name: str, ingest_result: IngestResult, client: anthropic.Anthropic) -> dict:
+def baseline_rate(repo_name: str, ingest_result: IngestResult, client: LLMClient) -> dict:
     file_tree_preview = "\n".join(ingest_result.file_tree[:200])
     truncated_note = " — truncated" if ingest_result.truncated else ""
 
@@ -46,20 +44,12 @@ def baseline_rate(repo_name: str, ingest_result: IngestResult, client: anthropic
         file_tree=file_tree_preview,
     )
 
-    model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
-    resp = client.messages.create(
-        model=model,
-        max_tokens=400,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    text = resp.content[0].text.strip()
-
     try:
-        result = json.loads(text)
-    except json.JSONDecodeError:
-        # Model didn't return clean JSON — don't crash the eval run over it,
-        # surface it as a low-confidence result instead.
-        result = {"score": None, "reasoning": f"Could not parse model output: {text[:200]}"}
+        result = client.complete_json(prompt, max_tokens=400)
+    except ValueError as e:
+        # Don't crash the eval run over one bad response — surface it as a
+        # low-confidence result instead.
+        result = {"score": None, "reasoning": str(e)}
 
     result["method"] = "baseline"
     result["repo"] = repo_name
