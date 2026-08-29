@@ -1,0 +1,157 @@
+You are quickly skimming an unfamiliar code repository to form a first impression of its quality — the way a busy person glancing at it for two minutes would. You only have the README and the file tree. You have NOT run the code, the tests, or checked dependencies.
+
+Repository: repo_1
+
+README:
+---
+# JavaScript Snake Game
+
+This is a DOM-based game of Snake that I wrote in JavaScript over a decade ago. It was made to have sort of a nostalgic feel to it.
+
+## Play and Edit the Game Online!
+
+You can now play and edit the game live in codesandbox:
+
+https://codesandbox.io/s/github/patorjk/JavaScript-Snake?file=/index.html
+
+**2025: Looks like CSS inside the sandbox isn't working properly, in the game it works fine though**
+
+On first load sometimes the game frame will not load correctly and you'll need to press the refresh icon above its display panel to get the game to show.
+
+Original game is located here:
+
+http://patorjk.com/games/snake
+
+## How to use
+
+The index.html file should give an idea of how to use this code. However, below you can see how to initialize it into any div within a webpage.
+
+    const mySnakeBoard = new SNAKE.Board( {
+                                            boardContainer: "game-area",
+                                            fullScreen: false,
+                                            width: 580,
+                                            height:400
+                                        });
+
+The comments within the source code are formatted a little strange because at the time I was playing around with YUI Doc which generates documentation from code. Kind of sucks that there's so much churn in the JavaScript world. However, I'm glad the rest of the code doesn't use any external libraries, as this game still works the same after over a decade.
+
+## Running
+
+Clone project, then at command line:
+
+```
+npx parcel src/index.html
+```
+
+Runs on http://localhost:1234
+
+## AI Snake
+
+If you want to control the snake via an AI algorithm see the ai-init.js and ai-example files.
+
+Essentially all you have to do is run `params.startAIGame();` when initializing and pass in a `moveSnakeWithAI` method 
+which is run before the snake does each move. 
+
+```js
+  moveSnakeWithAI: ({
+                      grid,
+                      snakeHead,
+                      currentDirection,
+                      isFirstGameMove,
+                      setDirection,
+                    }) => {
+
+    /*
+    Direction:
+                0
+              3   1
+                2
+     */
+
+    // This is NOT a real hamiltonian cycle. It misses some values, I'm just including this here as an example of
+    // a look-up type table that you could do.
+    const hamiltonianCycleGrid = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+      [0, 0, 2, 3, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 0],
+      [0, 0, 2, 0, 0, 3, 0, 2, 0, 2, 0, 2, 0, 2, 0],
+      [0, 0, 2, 0, 2, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0],
+      [0, 0, 3, 0, 3, 3, 3, 3, 0, 3, 0, 3, 0, 3, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+
+    const newDirection = hamiltonianCycleGrid[snakeHead.row][snakeHead.col];
+    setDirection(newDirection);
+  },
+  onInit: (params) => {
+      params.startAIGame(); // This start an AI game
+    },
+```
+
+## Contributors
+
+Thanks goes to these people: ([emoji key](https://allcontributors.org/docs/en/emoji-key))
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://patorjk.com/"><img src="https://avatars.githubusercontent.com/u/521224?v=4?s=100" width="100px;" alt="patorjk"/><br /><sub><b>patorjk</b></sub></a><br /><a href="#code-patorjk" title="Code">💻</a> <a href="#doc-patorjk" title="Documentation">📖</a> <a href="#design-patorjk" title="Design">🎨</a> <a href="#bug-patorjk" title="Bug reports">🐛</a> <a href="#example-patorjk" title="Examples">💡</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ultra17"><img src="https://avatars.githubusercontent.com/u/27869698?v=4?s=100" width="100px;" alt="ultra17"/><br /><sub><b>ultra17</b></sub></a><br /><a href="#code-ultra17" title="Code">💻</a> <a href="#doc-ultra17" title="Documentation">📖</a> <a href="#design-ultra17" title="Design">🎨</a> <a href="#bug-ultra17" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Rb64"><img src="https://avatars.githubusercontent.com/u/91498309?v=4?s=100" width="100px;" alt="Rb64"/><br /><sub><b>Rb64</b></sub></a><br /><a href="#code-Rb64" title="Code">💻</a> <a href="#bug-Rb64" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/legoman8304"><img src="https://avatars.githubusercontent.com/u/43346988?v=4?s=100" width="100px;" alt="Wyatt Nulton"/><br /><sub><b>Wyatt Nulton</b></sub></a><br /><a href="#code-legoman8304" title="Code">💻</a> <a href="#bug-legoman8304" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ashishsiot"><img src="https://avatars.githubusercontent.com/u/63919950?v=4?s=100" width="100px;" alt="Ashish Bhoir"/><br /><sub><b>Ashish Bhoir</b></sub></a><br /><a href="#doc-ashishsiot" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://dginovker.github.io"><img src="https://avatars.githubusercontent.com/u/32943174?v=4?s=100" width="100px;" alt="Dan G"/><br /><sub><b>Dan G</b></sub></a><br /><a href="#code-dginovker" title="Code">💻</a> <a href="#bug-dginovker" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Megas4ever"><img src="https://avatars.githubusercontent.com/u/28103886?v=4?s=100" width="100px;" alt="Megas4ever"/><br /><sub><b>Megas4ever</b></sub></a><br /><a href="#code-Megas4ever" title="Code">💻</a> <a href="#design-Megas4ever" title="Design">🎨</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mamamia5x"><img src="https://avatars.githubusercontent.com/u/57536929?v=4?s=100" width="100px;" alt="Bugs Bun
+---
+
+File tree (41 files):
+.all-contributorsrc
+.gitignore
+.parcelrc
+LICENSE
+README.md
+package-lock.json
+package.json
+src\ai-example.html
+src\css\Senura-snake.css
+src\css\black-snake.css
+src\css\blue-snake.css
+src\css\clean-snake.css
+src\css\common-snake.css
+src\css\cotton-candy-snake.css
+src\css\dark-snake.css
+src\css\golden-snake.css
+src\css\green-snake.css
+src\css\head-snake.css
+src\css\images\Thumbs.db
+src\css\images\dark-snakeblock.png
+src\css\images\dead-dark-snakeblock.png
+src\css\images\deadblock.png
+src\css\images\deadblock_border.png
+src\css\images\favicon.png
+src\css\images\green-body-snakeblock.png
+src\css\images\green-head-snakeblock.png
+src\css\images\matrix-food-block.png
+src\css\images\matrix-snake-block.png
+src\css\images\neon-body-snakeblock.png
+src\css\images\neon-dead-snakeblock.png
+src\css\images\snakeblock.png
+src\css\light-snake.css
+src\css\main-snake.css
+src\css\matrix-snake.css
+src\css\neon-snake.css
+src\css\og-snake.css
+src\css\teal-snake.css
+src\index.html
+src\js\ai-init.js
+src\js\init.js
+src\js\snake.js
+
+Rate this repository's likely quality from 1 (poor) to 10 (excellent), based only on this surface-level impression. Respond ONLY with valid JSON, no other text, in exactly this shape:
+{"score": <int 1-10>, "reasoning": "<2-3 sentence gut-impression explanation>"}

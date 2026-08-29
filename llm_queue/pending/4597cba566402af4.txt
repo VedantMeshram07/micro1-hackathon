@@ -1,0 +1,296 @@
+Review this source file from an unfamiliar repository. File: docs\plugins\conversion_table.py
+
+```
+from __future__ import annotations as _annotations
+
+import collections
+import typing
+from collections import deque
+from dataclasses import dataclass
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal
+from enum import Enum, IntEnum
+from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
+from pathlib import Path
+from typing import Any, Iterable, Mapping, Pattern, Sequence, Type
+from uuid import UUID
+
+from pydantic_core import CoreSchema, core_schema
+from typing_extensions import TypedDict
+
+from pydantic import ByteSize, InstanceOf
+
+
+@dataclass
+class Row:
+    field_type: type[Any] | str
+    input_type: type[Any] | str
+    python_input: bool = False
+    json_input: bool = False
+    strict: bool = False
+    condition: str | None = None
+    valid_examples: list[Any] | None = None
+    invalid_examples: list[Any] | None = None
+    core_schemas: list[type[CoreSchema]] | None = None
+
+    @property
+    def field_type_str(self) -> str:
+        return f'{self.field_type.__name__}' if hasattr(self.field_type, '__name__') else f'{self.field_type}'
+
+    @property
+    def input_type_str(self) -> str:
+        return f'{self.input_type.__name__}' if hasattr(self.input_type, '__name__') else f'{self.input_type}'
+
+    @property
+    def input_source_str(self) -> str:
+        if self.python_input:
+            if self.json_input:
+                return 'Python & JSON'
+            else:
+                return 'Python'
+        elif self.json_input:
+            return 'JSON'
+        else:
+            return ''
+
+
+@dataclass
+class ConversionTable:
+    rows: list[Row]
+
+    col_names = [
+        'Field Type',
+        'Input',
+        'Strict',
+        'Input Source',
+        'Conditions',
+    ]
+    open_nowrap_span = '<span style="white-space: nowrap;">'
+    close_nowrap_span = '</span>'
+
+    def col_values(self, row: Row) -> list[str]:
+        o = self.open_nowrap_span
+        c = self.close_nowrap_span
+
+        return [
+            f'{o}`{row.field_type_str}`{c}',
+            f'{o}`{row.input_type_str}`{c}',
+            '✓' if row.strict else '',
+            f'{o}{row.input_source_str}{c}',
+            row.condition if row.condition else '',
+        ]
+
+    @staticmethod
+    def row_as_markdown(cols: list[str]) -> str:
+        return f'| {" | ".join(cols)} |'
+
+    def as_markdown(self) -> str:
+        lines = [self.row_as_markdown(self.col_names), self.row_as_markdown(['-'] * len(self.col_names))]
+        for row in self.rows:
+            lines.append(self.row_as_markdown(self.col_values(row)))
+        return '\n'.join(lines)
+
+    @staticmethod
+    def row_sort_key(row: Row) -> Any:
+        field_type = row.field_type_str or ' '
+        input_type = row.input_type_str or ' '
+        input_source = row.input_source_str
+
+        # Include the .isupper() to make it so that leading-lowercase items come first
+        return field_type[0].isupper(), field_type, input_type[0].isupper(), input_type, input_source
+
+    def sorted(self) -> ConversionTable:
+        return ConversionTable(sorted(self.rows, key=self.row_sort_key))
+
+    def filtered(self, predicate: typing.Callable[[Row], bool]) -> ConversionTable:
+        return ConversionTable([row for row in self.rows if predicate(row)])
+
+
+table_rows: list[Row] = [
+    Row(
+        str,
+        str,
+        strict=True,
+        python_input=True,
+        json_input=True,
+        core_schemas=[core_schema.StringSchema],
+    ),
+    Row(
+        str,
+        bytes,
+        python_input=True,
+        condition='Assumes UTF-8, error on unicode decoding error.',
+        valid_examples=[b'this is bytes'],
+        invalid_examples=[b'\x81'],
+        core_schemas=[core_schema.StringSchema],
+    ),
+    Row(
+        str,
+        bytearray,
+        python_input=True,
+        condition='Assumes UTF-8, error on unicode decoding error.',
+        valid_examples=[bytearray(b'this is bytearray' * 3)],
+        invalid_examples=[bytearray(b'\x81' * 5)],
+        core_schemas=[core_schema.StringSchema],
+    ),
+    Row(
+        bytes,
+        bytes,
+        strict=True,
+        python_input=True,
+        core_schemas=[core_schema.BytesSchema],
+    ),
+    Row(
+        bytes,
+        str,
+        strict=True,
+        json_input=True,
+        valid_examples=['foo'],
+        core_schemas=[core_schema.BytesSchema],
+    ),
+    Row(
+        bytes,
+        str,
+        python_input=True,
+        valid_examples=['foo'],
+        core_schemas=[core_schema.BytesSchema],
+    ),
+    Row(
+        bytes,
+        bytearray,
+        python_input=True,
+        valid_examples=[bytearray(b'this is bytearray' * 3)],
+        core_schemas=[core_schema.BytesSchema],
+    ),
+    Row(
+        int,
+        int,
+        strict=True,
+        python_input=True,
+        json_input=True,
+        condition='`bool` is explicitly forbidden.',
+        invalid_examples=[2**64, True, False],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        int,
+        python_input=True,
+        json_input=True,
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        float,
+        python_input=True,
+        json_input=True,
+        condition='Must be exact int, e.g. `val % 1 == 0`, raises error for `nan`, `inf`.',
+        valid_examples=[2.0],
+        invalid_examples=[2.1, 2.2250738585072011e308, float('nan'), float('inf')],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        Decimal,
+        python_input=True,
+        condition='Must be exact int, e.g. `val % 1 == 0`.',
+        valid_examples=[Decimal(2.0)],
+        invalid_examples=[Decimal(2.1)],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        bool,
+        python_input=True,
+        json_input=True,
+        valid_examples=[True, False],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        str,
+        python_input=True,
+        json_input=True,
+        condition='Must be numeric only, e.g. `[0-9]+`.',
+        valid_examples=['123'],
+        invalid_examples=['test', '123x'],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        int,
+        bytes,
+        python_input=True,
+        condition='Must be numeric only, e.g. `[0-9]+`.',
+        valid_examples=[b'123'],
+        invalid_examples=[b'test', b'123x'],
+        core_schemas=[core_schema.IntSchema],
+    ),
+    Row(
+        float,
+        float,
+        strict=True,
+        python_input=True,
+        json_input=True,
+        condition='`bool` is explicitly forbidden.',
+        invalid_examples=[True, False],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        float,
+        int,
+        strict=True,
+        python_input=True,
+        json_input=True,
+        valid_examples=[123],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        float,
+        str,
+        python_input=True,
+        json_input=True,
+        condition='Must match `[0-9]+(\\.[0-9]+)?`.',
+        valid_examples=['3.141'],
+        invalid_examples=['test', '3.141x'],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        float,
+        bytes,
+        python_input=True,
+        condition='Must match `[0-9]+(\\.[0-9]+)?`.',
+        valid_examples=[b'3.141'],
+        invalid_examples=[b'test', b'3.141x'],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        float,
+        Decimal,
+        python_input=True,
+        valid_examples=[Decimal(3.5)],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        float,
+        bool,
+        python_input=True,
+        json_input=True,
+        valid_examples=[True, False],
+        core_schemas=[core_schema.FloatSchema],
+    ),
+    Row(
+        bool,
+        bool,
+        strict=True,
+        python_input=True,
+        json_input=True,
+        valid_examples=[True, False],
+        core_schemas=[core_schema.BoolSchema],
+    ),
+    Row(
+        bool,
+        int,
+        python_i
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

@@ -13,7 +13,6 @@ Run: streamlit run app.py
 import os
 import tempfile
 
-import anthropic
 import streamlit as st
 import yaml
 from dotenv import load_dotenv
@@ -22,6 +21,7 @@ from agent.audit_repo import audit_repo
 from agent.trajectory_logger import TrajectoryLogger
 from baseline.rate_repo import baseline_rate
 from ingest.ingest import ingest
+from llm.client import LLMClient
 from report.generate_report import load_report, render_markdown
 
 load_dotenv()
@@ -91,7 +91,7 @@ with tab_live:
 
         if source and st.button("Run analysis"):
             with st.spinner("Ingesting and auditing — this runs build/tests and several LLM calls, may take a minute..."):
-                client = anthropic.Anthropic()
+                client = LLMClient()
                 ingest_result = ingest(source)
                 logger = TrajectoryLogger()
 

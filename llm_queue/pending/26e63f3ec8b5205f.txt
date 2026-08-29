@@ -1,0 +1,14 @@
+Review this source file from an unfamiliar repository. File: static\util.js
+
+```
+function action(endpoint_name) {
+    window.location.replace('/' + endpoint_name);
+}
+
+function redirect_to_demo(code) {
+    window.location.replace('/demo');
+}
+
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

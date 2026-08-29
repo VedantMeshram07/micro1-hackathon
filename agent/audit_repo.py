@@ -9,15 +9,15 @@ about what it couldn't check.
 
 import json
 import os
+import shutil
 import subprocess
 
-import anthropic
 import requests
 
 from ingest.ingest import IngestResult
 from agent.trajectory_logger import TrajectoryLogger
+from llm.client import LLMClient, parse_json_response
 
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
 BUILD_TIMEOUT_SEC = 120
 
 # Files worth reading in full for the sampled code review, in priority order.
@@ -28,7 +28,7 @@ ENTRY_POINT_HINTS = [
 SOURCE_EXTENSIONS = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs", ".java", ".cpp", ".c"}
 
 
-def audit_repo(repo_name: str, ingest_result: IngestResult, client: anthropic.Anthropic,
+def audit_repo(repo_name: str, ingest_result: IngestResult, client: LLMClient,
                 logger: TrajectoryLogger, github_url: str | None = None,
                 github_token: str | None = None) -> dict:
     evidence = {"repo": repo_name}
@@ -75,7 +75,17 @@ def _run_build_and_tests(ingest_result: IngestResult, logger: TrajectoryLogger) 
 
 def _try_python(path: str) -> dict:
     try:
-        install = _run(["pip", "install", "-r", "requirements.txt", "--quiet"], cwd=path)
+        if os.path.exists(os.path.join(path, "requirements.txt")):
+            install = _run(["pip", "install", "-r", "requirements.txt", "--quiet"], cwd=path)
+        elif os.path.exists(os.path.join(path, "pyproject.toml")):
+            # No requirements.txt — install the package itself (editable) plus
+            # pytest as a safety net, since test-runner presence isn't a
+            # judgment on the project if it's just missing from our sandbox.
+            install = _run(["pip", "install", "-e", ".", "--quiet"], cwd=path)
+            _run(["pip", "install", "pytest", "--quiet"], cwd=path)
+        else:
+            return {"attempted": False, "reason": "No requirements.txt or pyproject.toml found — can't determine how to install."}
+
         test = _run(["python", "-m", "pytest", "--tb=no", "-q"], cwd=path)
         return {
             "attempted": True,
@@ -102,6 +112,10 @@ def _try_node(path: str) -> dict:
 
 
 def _run(cmd: list, cwd: str) -> dict:
+    resolved = shutil.which(cmd[0])
+    if resolved is None:
+        return {"ok": False, "stdout": "", "stderr": f"Command not found on PATH: {cmd[0]}"}
+    cmd = [resolved] + cmd[1:]
     try:
         proc = subprocess.run(
             cmd, cwd=cwd, capture_output=True, text=True,
@@ -118,13 +132,15 @@ def _run(cmd: list, cwd: str) -> dict:
 
 def _check_dependencies(ingest_result: IngestResult, logger: TrajectoryLogger) -> dict:
     path = ingest_result.local_path
-    findings = {"unpinned_count": 0, "total_declared": 0, "manifest_found": False}
+    findings = {"unpinned_count": 0, "total_declared": 0, "manifest_found": False, "manifest_type": None}
 
     req_path = os.path.join(path, "requirements.txt")
     pkg_path = os.path.join(path, "package.json")
+    pyproject_path = os.path.join(path, "pyproject.toml")
 
     if os.path.exists(req_path):
         findings["manifest_found"] = True
+        findings["manifest_type"] = "requirements.txt"
         with open(req_path, "r", errors="replace") as fh:
             lines = [l.strip() for l in fh if l.strip() and not l.startswith("#")]
         findings["total_declared"] = len(lines)
@@ -132,16 +148,45 @@ def _check_dependencies(ingest_result: IngestResult, logger: TrajectoryLogger) -
 
     elif os.path.exists(pkg_path):
         findings["manifest_found"] = True
+        findings["manifest_type"] = "package.json"
         with open(pkg_path, "r", errors="replace") as fh:
             data = json.load(fh)
         deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
         findings["total_declared"] = len(deps)
         findings["unpinned_count"] = sum(1 for v in deps.values() if v.startswith("^") or v.startswith("~"))
 
+    elif os.path.exists(pyproject_path):
+        findings["manifest_found"] = True
+        findings["manifest_type"] = "pyproject.toml"
+        try:
+            import tomllib
+            with open(pyproject_path, "rb") as fh:
+                data = tomllib.load(fh)
+
+            # PEP 621 standard format: [project] dependencies = ["pkg>=1.0", ...]
+            pep621_deps = data.get("project", {}).get("dependencies", [])
+            # Poetry-style: [tool.poetry.dependencies] pkg = "^1.0"
+            poetry_deps = data.get("tool", {}).get("poetry", {}).get("dependencies", {})
+
+            if pep621_deps:
+                findings["total_declared"] = len(pep621_deps)
+                findings["unpinned_count"] = sum(1 for d in pep621_deps if "==" not in d)
+            elif poetry_deps:
+                real_deps = {k: v for k, v in poetry_deps.items() if k.lower() != "python"}
+                findings["total_declared"] = len(real_deps)
+                findings["unpinned_count"] = sum(
+                    1 for v in real_deps.values()
+                    if not (isinstance(v, str) and v.startswith("=="))
+                )
+        except Exception as e:
+            # Don't let a parsing quirk crash the whole audit — record it as
+            # a finding instead (manifest presence is still correctly noted).
+            findings["parse_error"] = str(e)
+
     logger.log_step(
         step_type="check_dependencies",
         instruction="Check declared dependencies for version pinning as a lightweight maintenance-risk signal",
-        tool_input={"manifest_checked": "requirements.txt or package.json"},
+        tool_input={"manifest_checked": findings.get("manifest_type")},
         tool_output=json.dumps(findings),
         decision="Flag as a risk factor if a large share of deps are unpinned, not a hard fail",
     )
@@ -174,7 +219,7 @@ def _check_docker(ingest_result: IngestResult, logger: TrajectoryLogger) -> dict
 # Step: sampled code review (this is where real judgment happens)
 # ---------------------------------------------------------------------------
 
-def _sample_code_review(ingest_result: IngestResult, client: anthropic.Anthropic,
+def _sample_code_review(ingest_result: IngestResult, client: LLMClient,
                           logger: TrajectoryLogger, max_files: int = 5) -> list:
     candidates = _pick_files_to_review(ingest_result.file_tree, max_files)
     reviews = []
@@ -194,21 +239,17 @@ def _sample_code_review(ingest_result: IngestResult, client: anthropic.Anthropic
             '{"readability": "<1 sentence>", "error_handling": "<1 sentence>", '
             '"concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}'
         )
-        resp = client.messages.create(model=MODEL, max_tokens=500,
-                                       messages=[{"role": "user", "content": prompt}])
-        text = resp.content[0].text.strip()
-
         try:
-            parsed = json.loads(text)
-        except json.JSONDecodeError:
-            parsed = {"error": f"unparsable model output: {text[:200]}"}
+            parsed = client.complete_json(prompt, max_tokens=900)
+        except ValueError as e:
+            parsed = {"error": str(e)}
         parsed["file"] = rel_path
         reviews.append(parsed)
 
         logger.log_step(
             step_type="llm_file_review",
             instruction=f"Review {rel_path} for readability, error handling, and concrete concerns",
-            tool_input={"file": rel_path, "chars_sent": len(content)},
+            tool_input={"file": rel_path, "chars_sent": len(content), "active_model": client.get_active_model()},
             tool_output=json.dumps(parsed)[:1500],
             decision="Feed into final synthesis as one evidence source among several",
         )
@@ -271,7 +312,7 @@ def _mine_github_activity(github_url: str, github_token: str | None, logger: Tra
 # ---------------------------------------------------------------------------
 
 def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: dict,
-                        client: anthropic.Anthropic, logger: TrajectoryLogger) -> dict:
+                        client: LLMClient, logger: TrajectoryLogger) -> dict:
     prompt = (
         "You are writing an evidence-based code-quality due-diligence report. "
         "Use ONLY the evidence below — do not invent facts not supported by it. "
@@ -283,6 +324,14 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         f"Docker evidence: {json.dumps(evidence['docker'])}\n\n"
         f"Sampled file reviews: {json.dumps(evidence['code_review'])}\n\n"
         f"GitHub activity: {json.dumps(evidence['activity'])}\n\n"
+        "Score anchor — commit to a band, don't default to the middle:\n"
+        "9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found\n"
+        "7-8: Builds and mostly works, only minor gaps, no major red flags\n"
+        "5-6: Some real risks present but core functionality is demonstrated\n"
+        "3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths\n"
+        "1-2: Fundamentally broken, unusable, or dangerous as evidenced\n"
+        "Two repos with meaningfully different evidence should get meaningfully different scores — "
+        "don't converge on a 'safe' middle number.\n\n"
         "Respond ONLY with JSON in exactly this shape:\n"
         '{"score": <int 1-10>, '
         '"summary": "<2-3 sentence overall verdict>", '
@@ -291,14 +340,10 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         '"unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}'
     )
 
-    resp = client.messages.create(model=MODEL, max_tokens=1200,
-                                   messages=[{"role": "user", "content": prompt}])
-    text = resp.content[0].text.strip()
-
     try:
-        report = json.loads(text)
-    except json.JSONDecodeError:
-        report = {"score": None, "summary": f"Could not parse synthesis output: {text[:300]}",
+        report = client.complete_json(prompt, max_tokens=2500)
+    except ValueError as e:
+        report = {"score": None, "summary": str(e),
                    "strengths": [], "risks": [], "unverifiable": []}
 
     report["repo"] = repo_name
@@ -307,7 +352,7 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
     logger.log_step(
         step_type="synthesize_report",
         instruction="Combine all gathered evidence into one scored, evidence-linked report",
-        tool_input={"evidence_keys": list(evidence.keys())},
+        tool_input={"evidence_keys": list(evidence.keys()), "active_model": client.get_active_model()},
         tool_output=json.dumps(report)[:2000],
         decision="Final output for this run",
     )

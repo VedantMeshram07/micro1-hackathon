@@ -9,7 +9,6 @@ Usage:
 
 import os
 
-import anthropic
 import yaml
 from dotenv import load_dotenv
 from scipy.stats import spearmanr
@@ -18,6 +17,7 @@ from agent.audit_repo import audit_repo
 from agent.trajectory_logger import TrajectoryLogger
 from baseline.rate_repo import baseline_rate
 from ingest.ingest import ingest
+from llm.client import LLMClient
 from report.generate_report import load_report, save_report
 
 load_dotenv()
@@ -40,7 +40,7 @@ def main():
         print(f"⚠ repos_manifest.yaml has empty github_url for: {unfilled}")
         return
 
-    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+    client = LLMClient()
 
     baseline_scores, agent_scores, gt_ranks = [], [], []
 

@@ -1,0 +1,26 @@
+You are writing an evidence-based code-quality due-diligence report. Use ONLY the evidence below — do not invent facts not supported by it. Every concern or strength must reference the specific evidence it came from.
+
+Repository: repo_4
+
+Detected languages: [('python', 'pip'), ('python', 'pip')]
+
+Build/test evidence: {"attempted": true, "install_ok": false, "tests_ran": false, "test_summary": "\n=========================== short test summary info ===========================\nERROR test/test_endpoints.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.17s\n"}
+
+Dependency evidence: {"unpinned_count": 0, "total_declared": 11, "manifest_found": true, "manifest_type": "requirements.txt"}
+
+Docker evidence: {"has_dockerfile": false, "has_compose": false, "build_attempted": false}
+
+Sampled file reviews: [{"readability": "Flask application file initializing OAuth2Service endpoints (`/signup`, `/submit`, `/products`, `/health`) and templates.", "error_handling": "Uses `requests_session.post` to exchange OAuth codes but lacks try-except wrapper around network timeouts.", "concerns": ["Loads `config.json` synchronously at module import time and stores tokens directly in `session['access_token']`."], "notable_strengths": ["Enforces SSL via `SSLify(app)` and uses `os.urandom(24)` for dynamic Flask secret key generation."], "file": "app.py"}, {"readability": "Minimal setuptools configuration file (`setup.py`) declaring package metadata for `Python-Sample-Application`.", "error_handling": "Standard setuptools script without explicit exception handling logic.", "concerns": ["Hardcoded version string `0.0.1` and missing install_requires dependency specifications."], "notable_strengths": ["Uses `find_packages()` for dynamic package discovery and includes explicit author attribution."], "file": "setup.py"}, {"readability": "Compact utility script defining `action` and `redirect_to_demo` navigation functions.", "error_handling": "No validation on `endpoint_name` string parameter before location assignment.", "concerns": ["Direct `window.location.replace` calls with unencoded parameters can cause open redirect vulnerabilities."], "notable_strengths": ["Simple functional helpers for client-side route redirection."], "file": "static\\util.js"}]
+
+GitHub activity: {"error": null, "open_issue_count_sampled": 20, "recent_merge_count_sampled": 13}
+
+Score anchor — commit to a band, don't default to the middle:
+9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found
+7-8: Builds and mostly works, only minor gaps, no major red flags
+5-6: Some real risks present but core functionality is demonstrated
+3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths
+1-2: Fundamentally broken, unusable, or dangerous as evidenced
+Two repos with meaningfully different evidence should get meaningfully different scores — don't converge on a 'safe' middle number.
+
+Respond ONLY with JSON in exactly this shape:
+{"score": <int 1-10>, "summary": "<2-3 sentence overall verdict>", "strengths": [{"point": "...", "evidence": "..."}], "risks": [{"point": "...", "evidence": "..."}], "unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}

@@ -1,0 +1,45 @@
+Review this source file from an unfamiliar repository. File: sjf.cpp
+
+```
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    int burst[n], waiting[n], turnaround[n];
+
+    for (int i = 0; i < n; i++) {
+        cout << "Enter burst time for P" << i + 1 << ": ";
+        cin >> burst[i];
+    }
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (burst[i] > burst[j]) {
+                swap(burst[i], burst[j]);
+            }
+        }
+    }
+
+    waiting[0] = 0;
+    for (int i = 1; i < n; i++) {
+        waiting[i] = waiting[i - 1] + burst[i - 1];
+    }
+
+    cout << "\nProcess\tBurst\tWaiting\tTurnaround\n";
+    for (int i = 0; i < n; i++) {
+        turnaround[i] = waiting[i] + burst[i];
+        cout << "P" << i + 1 << "\t" << burst[i]
+             << "\t" << waiting[i]
+             << "\t" << turnaround[i] << endl;
+    }
+
+    return 0;
+}
+
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

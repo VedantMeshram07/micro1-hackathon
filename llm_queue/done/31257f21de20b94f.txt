@@ -1,0 +1,1 @@
+{"score": 5, "reasoning": "Specialized medical device HL7 receiving application with automated parsing for Abbott AFINION 2 machines. Includes explicit setup instructions for Flask and hl7apy dependencies, but commits compiled Windows executables directly into git."}

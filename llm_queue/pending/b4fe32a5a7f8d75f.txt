@@ -1,0 +1,72 @@
+Review this source file from an unfamiliar repository. File: round_robin.cpp
+
+```
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Process {
+    int pid;
+    int burst;
+    int remaining;
+    int waiting;
+    int turnaround;
+};
+
+void roundRobin(vector<Process>& p, int quantum) {
+    int time = 0;
+    bool done;
+
+    do {
+        done = true;
+        for (int i = 0; i < p.size(); i++) {
+            if (p[i].remaining > 0) {
+                done = false;
+
+                if (p[i].remaining > quantum) {
+                    time += quantum;
+                    p[i].remaining -= quantum;
+                } else {
+                    time += p[i].remaining;
+                    p[i].waiting = time - p[i].burst;
+                    p[i].remaining = 0;
+                    p[i].turnaround = time;
+                }
+            }
+        }
+    } while (!done);
+}
+
+int main() {
+    int n, quantum;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    vector<Process> p(n);
+
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        cout << "Enter burst time for P" << p[i].pid << ": ";
+        cin >> p[i].burst;
+        p[i].remaining = p[i].burst;
+    }
+
+    cout << "Enter time quantum: ";
+    cin >> quantum;
+
+    roundRobin(p, quantum);
+
+    cout << "\nPID\tBurst\tWaiting\tTurnaround\n";
+    for (int i = 0; i < n; i++) {
+        cout << "P" << p[i].pid << "\t"
+             << p[i].burst << "\t"
+             << p[i].waiting << "\t"
+             << p[i].turnaround << endl;
+    }
+
+    return 0;
+}
+
+```
+
+Respond ONLY with JSON: {"readability": "<1 sentence>", "error_handling": "<1 sentence>", "concerns": ["<specific, evidence-based concern>", ...], "notable_strengths": ["...", ...]}

@@ -1,0 +1,1 @@
+{"score": 5, "reasoning": "Educational OS process scheduling simulator implementing FCFS, SJF, Priority, and Round Robin algorithms in C++. Straightforward academic layout with no build system."}

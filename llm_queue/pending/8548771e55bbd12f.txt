@@ -1,0 +1,391 @@
+You are quickly skimming an unfamiliar code repository to form a first impression of its quality — the way a busy person glancing at it for two minutes would. You only have the README and the file tree. You have NOT run the code, the tests, or checked dependencies.
+
+Repository: repo_6
+
+README:
+---
+CoolReader 3 - cross platform open source e-book reader
+=======================================================
+
+(c) Vadim Lopatin, 1998-2026
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+Directories
+-----------
+
+        crengine   - CREngine (DOM/XML/CSS ebook rendering library) sources
+        cr3gui     - CR3 with CR3GUI for e-ink devices sources
+        cr3qt      - CR3 with Qt based GUI
+        cr3wx      - CR3 with wxWidgets based GUI
+        thirdparty - third party libraries, to use if not found in system (zlib, libpng, libjpeg, freetype, etc...)
+        thirdparty_repo - repository for third party libraries deployments
+        thirdparty_unman - unmanaged third party libraries
+        tinydict   - small library for .dict file format support
+        tools      - miscellaneous configuration files
+        android    - Android frontend
+
+External dependencies
+---------------------
+
+        common: zlib, libpng, libjpeg, freetype, harfbuzz, fribidi, libunibreak, utf8proc, zstd
+        cr3gui/xcb: libxcb, fontconfig
+        cr3gui/nanoX: libnanoX
+        cr3/Qt: fontconfig, qt5-base, qt5-tools
+        cr3/wx: fontconfig, wxWidgets 3.0
+
+e.g., for Ubuntu you may use
+
+        $ sudo apt install build-essential git cmake curl pkg-config zlib1g-dev libpng-dev libjpeg-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libunibreak-dev libzstd-dev libutf8proc-dev
+
+To build Qt frontend:
+
+        $ sudo apt install qtbase5-dev qttools5-dev
+
+To build wxWidgets frontend:
+
+        $ sudo apt install libwxgtk3.0-gtk3-dev
+
+
+Embedded Third Party Components
+-------------------------------
+* antiword (GPLv2+)
+* chmlib (LGPLv2.1+)
+* nanosvg (ZLib)
+* qimagescale (imlib2, GPLv2, LGPLv3+)
+* xxhash (BSD-2)
+* coffeecatch (BSD-2)
+* Some hyphenation patterns from http://www.hyphenation.org (only patterns under Unlicense, MIT, BSD, MPL, GPLv2, LGPLv2.1)
+* Russian hyphenation patterns - https://github.com/laboratory50/russian-spellpack (LGPL)
+
+
+Packaging
+---------
+
+Debian based packages included to project:
+
+        packages/ubuntu -- debian package for Ubuntu, with Qt frontend
+        packages/openinkpot -- debian package for OpenInkpot, with XCB frontend
+
+To build debian package, copy one of package descriptions from packages directory:
+
+        cp -r packages/ubuntu/debian debian
+        Then, package can be built using `debuild` command.
+
+
+Android Build Instructions
+--------------------------
+
+* Deploy/update third party libraries: in terminal call script thirdparty-deploy.sh
+
+In Windows can be used git bash terminal
+
+        $ ./thirdparty-deploy.sh
+
+* Use Android Studio - open subdirectory "android" as Android Studio project
+
+Ensure that you have Android SDK and NDK installed
+
+QtCreator Build Instructions (Windows)
+--------------------------------------
+
+You will need to download dependencies.
+Use some bash console, e.g. "Git Bash"
+
+First, clone CoolReader repository:
+
+        $ git clone https://github.com/buggins/coolreader.git
+        $ cd coolreader
+
+Now you can download source code for third party dependencies.
+
+        $ ./thirdparty-deploy.sh
+
+Now you can open CoolReader project in QtCreator.
+
+Use File/Open project or file menu item, and choose `coolreader` root directory.
+
+
+
+CMake Build Instructions (Linux)
+------------------------
+
+In case the installed libraries are outdated, run the `thirdparty-deploy.sh` script to download libraries sources of the recommended versions. In this case, the build system will build static libraries that were not found in the system.
+
+        $ ./thirdparty-deploy.sh
+
+Building Qt version (qtbase5-dev, qttools5-dev should be installed)
+
+        mkdir qtbuild
+        cd qtbuild
+        cmake -D GUI=QT5 -D CMAKE_BUILD_TYPE=Release -D MAX_IMAGE_SCALE_MUL=2 -D DOC_DATA_COMPRESSION_LEVEL=3 -D DOC_BUFFER_SIZE=0x1400000 -D CMAKE_INSTALL_PREFIX=/usr ..
+        make
+        sudo make install
+
+
+Building Qt version, in DEBUG mode
+
+        mkdir qtbuild
+        cd qtbuild
+        cmake -D GUI=QT5 -D CMAKE_BUILD_TYPE=Debug -D MAX_IMAGE_SCALE_MUL=2 -D DOC_DATA_COMPRESSION_LEVEL=3 -D DOC_BUFFER_SIZE=0x1400000 -D CMAKE_INSTALL_PREFIX=/usr ..
+        make
+        sudo make install
+
+Building wxWidgets version (libwxgtk3.0-gtk3-dev should be installed)
+
+        mkdir wxbuild
+        cd wxbuild
+        cmake -D GUI=WX -D CMAKE_BUILD_TYPE=Release -D MAX_IMAGE_SCALE_MUL=2 -D DOC_DATA_COMPRESSION_LEVEL=3 -D DOC_BUFFER_SIZE=0x1400000 -D CMAKE_INSTALL_PREFIX=/usr ..
+        make
+
+
+Qt Build under Windows (Using MSYS2)
+======================
+
+- Download and install msys2 from https://www.msys2.org/
+- Update MSYS2:
+
+Run "MSYS2 MSYS" from start menu
+
+        $ pacman -Sy
+        $ pacman -Su
+
+Run "MSYS2 MSYS" from Start menu again.<br/>
+Update the rest of the base packages:
+
+        $ pacman -Su
+
+- Install build tools & dependencies:
+
+Run "MSYS2 MSYS" from start menu.<br/>
+Using pacman package manager install required packages:
+
+        $ pacman -S --needed base-devel mingw-w64-x86_64-toolchain
+        $ pacman -S git curl
+        $ pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-pkgconf mingw-w64-x86_64-zlib mingw-w64-x86_64-libpng mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-freetype mingw-w64-x86_64-fontconfig mingw-w64-x86_64-harfbuzz mingw-w64-x86_64-fribidi mingw-w64-x86_64-zstd
+
+        To build Qt frontend:
+
+        $ pacman -S mingw-w64-x86_64-qt5
+
+- Prepare:
+
+Run "MSYS2 MinGW 64-bit" from start menu
+
+        $ git clone https://github.com/buggins/coolreader.git
+        $ cd coolreader
+
+Since package libunibreak not exists in MSYS2, we must build static version of this library, to do this, we need to call the script thirdparty-deploy.sh to download sources:
+
+        $ ./thirdparty-deploy.sh
+
+Build system will build static libraries that were not found in the system.
+
+- Co
+---
+
+File tree (500 files — truncated):
+.clang-format
+.clang-format-ignore
+.gitignore
+AUTHORS
+CMakeLists.txt
+CONTRIBUTING.md
+LICENSE
+README.md
+android\.classpath
+android\.cproject
+android\.gitignore
+android\.project
+android\AndroidManifest.xml
+android\app\.gitignore
+android\app\CMakeLists.txt
+android\app\build.gradle
+android\app\proguard-rules-optimize.pro
+android\app\proguard-rules.pro
+android\app\src\main\AndroidManifest.xml
+android\app\thirdparty_libs\Android.mk
+android\app\thirdparty_libs\CMakeLists.txt
+android\app\thirdparty_libs\antiword\Android.mk
+android\app\thirdparty_libs\antiword\CMakeLists.txt
+android\app\thirdparty_libs\chmlib\Android.mk
+android\app\thirdparty_libs\chmlib\CMakeLists.txt
+android\app\thirdparty_libs\freetype\Android.mk
+android\app\thirdparty_libs\freetype\CMakeLists.txt
+android\app\thirdparty_libs\fribidi\Android.mk
+android\app\thirdparty_libs\fribidi\CMakeLists.txt
+android\app\thirdparty_libs\fribidi\config.h
+android\app\thirdparty_libs\fribidi\lib\fribidi-config.h
+android\app\thirdparty_libs\harfbuzz\Android.mk
+android\app\thirdparty_libs\harfbuzz\CMakeLists.txt
+android\app\thirdparty_libs\harfbuzz\config.h
+android\app\thirdparty_libs\libjpeg\Android.mk
+android\app\thirdparty_libs\libjpeg\CMakeLists.txt
+android\app\thirdparty_libs\libpng\Android.mk
+android\app\thirdparty_libs\libpng\CMakeLists.txt
+android\app\thirdparty_libs\libpng\config.h
+android\app\thirdparty_libs\libpng\lib\pnglibconf.c
+android\app\thirdparty_libs\libpng\lib\pnglibconf.h
+android\app\thirdparty_libs\libpng\lib\pngprefix.h
+android\app\thirdparty_libs\libunibreak\Android.mk
+android\app\thirdparty_libs\libunibreak\CMakeLists.txt
+android\app\thirdparty_libs\qimagescale\Android.mk
+android\app\thirdparty_libs\qimagescale\CMakeLists.txt
+android\app\thirdparty_libs\utf8proc\Android.mk
+android\app\thirdparty_libs\utf8proc\CMakeLists.txt
+android\app\thirdparty_libs\zstd\Android.mk
+android\app\thirdparty_libs\zstd\CMakeLists.txt
+android\build.gradle
+android\build.properties
+android\call_clanganalyzer.sh
+android\debug\org.coolreader.crengine.L.java
+android\genrescollection\.gitignore
+android\genrescollection\build.gradle
+android\genrescollection\consumer-rules.pro
+android\genrescollection\proguard-rules.pro
+android\genrescollection\src\main\AndroidManifest.xml
+android\gradle.properties
+android\gradle\wrapper\gradle-wrapper.jar
+android\gradle\wrapper\gradle-wrapper.properties
+android\gradlew
+android\gradlew.bat
+android\jni\.cproject
+android\jni\.project
+android\jni\Android.mk
+android\jni\Application.mk
+android\jni\coffeecatch\LICENSE
+android\jni\coffeecatch\Makefile
+android\jni\coffeecatch\README.md
+android\jni\coffeecatch\coffeecatch.c
+android\jni\coffeecatch\coffeecatch.h
+android\jni\coffeecatch\coffeejni.c
+android\jni\coffeecatch\coffeejni.h
+android\jni\coffeecatch\sample.c
+android\jni\cr3engine.cpp
+android\jni\cr3java.cpp
+android\jni\cr3java.h
+android\jni\docview.cpp
+android\jni\docview.h
+android\jni\gen_jni
+android\jni\gen_jni_studio
+android\jni\org_coolreader_crengine_DocView.h
+android\jni\org_coolreader_crengine_Engine.h
+android\jni\run_make
+android\project.properties
+android\readme.txt
+android\res\color-v21\common_tint_black.xml
+android\res\color-v21\common_tint_dark.xml
+android\res\color-v21\common_tint_hc_dark.xml
+android\res\color-v21\common_tint_hc_light.xml
+android\res\color-v21\common_tint_light.xml
+android\res\color-v21\common_tint_white.xml
+android\res\color-v21\compoundbutton_tint_black.xml
+android\res\color-v21\compoundbutton_tint_dark.xml
+android\res\color-v21\compoundbutton_tint_hc_dark.xml
+android\res\color-v21\compoundbutton_tint_hc_light.xml
+android\res\color-v21\compoundbutton_tint_light.xml
+android\res\color-v21\compoundbutton_tint_white.xml
+android\res\color-v24\switch_thumb_tint_black.xml
+android\res\color-v24\switch_thumb_tint_dark.xml
+android\res\color-v24\switch_thumb_tint_hc_dark.xml
+android\res\color-v24\switch_thumb_tint_hc_light.xml
+android\res\color-v24\switch_thumb_tint_light.xml
+android\res\color-v24\switch_thumb_tint_white.xml
+android\res\color-v24\switch_track_tint_dark.xml
+android\res\color-v24\switch_track_tint_hc_dark.xml
+android\res\color-v24\switch_track_tint_hc_light.xml
+android\res\color-v24\switch_track_tint_light.xml
+android\res\color\btn_default_hc_dark_text.xml
+android\res\color\btn_default_hc_light_text.xml
+android\res\color\label_dark.xml
+android\res\color\label_hc_dark.xml
+android\res\color\label_hc_light.xml
+android\res\color\label_light.xml
+android\res\color\value_dark.xml
+android\res\color\value_light.xml
+android\res\drawable-hdpi-v11\tab_selected_focused_holo.9.png
+android\res\drawable-hdpi-v11\tab_selected_holo.9.png
+android\res\drawable-hdpi-v11\tab_selected_pressed_holo.9.png
+android\res\drawable-hdpi-v11\tab_unselected_focused_holo.9.png
+android\res\drawable-hdpi-v11\tab_unselected_holo.9.png
+android\res\drawable-hdpi-v11\tab_unselected_pressed_holo.9.png
+android\res\drawable-hdpi-v21\tab_indicator_mtrl_alpha.9.png
+android\res\drawable-hdpi\cr3_browser_back.png
+android\res\drawable-hdpi\cr3_browser_back_hc.png
+android\res\drawable-hdpi\cr3_browser_book.png
+android\res\drawable-hdpi\cr3_browser_book_chm.png
+android\res\drawable-hdpi\cr3_browser_book_doc.png
+android\res\drawable-hdpi\cr3_browser_book_epub.png
+android\res\drawable-hdpi\cr3_browser_book_fb2.png
+android\res\drawable-hdpi\cr3_browser_book_fb3.png
+android\res\drawable-hdpi\cr3_browser_book_hc.png
+android\res\drawable-hdpi\cr3_browser_book_html.png
+android\res\drawable-hdpi\cr3_browser_book_odt.png
+android\res\drawable-hdpi\cr3_browser_book_pdb.png
+android\res\drawable-hdpi\cr3_browser_book_rtf.png
+android\res\drawable-hdpi\cr3_browser_book_txt.png
+android\res\drawable-hdpi\cr3_browser_find.png
+android\res\drawable-hdpi\cr3_browser_find_hc.png
+android\res\drawable-hdpi\cr3_browser_folder.png
+android\res\drawable-hdpi\cr3_browser_folder_authors.png
+android\res\drawable-hdpi\cr3_browser_folder_authors_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_current_book.png
+android\res\drawable-hdpi\cr3_browser_folder_current_book_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_opds.png
+android\res\drawable-hdpi\cr3_browser_folder_opds_add.png
+android\res\drawable-hdpi\cr3_browser_folder_opds_add_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_opds_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_recent.png
+android\res\drawable-hdpi\cr3_browser_folder_recent_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_root.png
+android\res\drawable-hdpi\cr3_browser_folder_root_hc.png
+android\res\drawable-hdpi\cr3_browser_folder_zip.png
+android\res\drawable-hdpi\cr3_browser_folder_zip_hc.png
+android\res\drawable-hdpi\cr3_btn_books_swap.png
+android\res\drawable-hdpi\cr3_btn_books_swap_hc.png
+android\res\drawable-hdpi\cr3_button_add.png
+android\res\drawable-hdpi\cr3_button_add_hc.png
+android\res\drawable-hdpi\cr3_button_book_delete.png
+android\res\drawable-hdpi\cr3_button_book_open.png
+android\res\drawable-hdpi\cr3_button_book_open_hc.png
+android\res\drawable-hdpi\cr3_button_bookmarks.png
+android\res\drawable-hdpi\cr3_button_bookmarks_hc.png
+android\res\drawable-hdpi\cr3_button_cancel.png
+android\res\drawable-hdpi\cr3_button_cancel_hc.png
+android\res\drawable-hdpi\cr3_button_dec.png
+android\res\drawable-hdpi\cr3_button_dec_dark.png
+android\res\drawable-hdpi\cr3_button_dec_hc.png
+android\res\drawable-hdpi\cr3_button_dec_light.png
+android\res\drawable-hdpi\cr3_button_dec_white.png
+android\res\drawable-hdpi\cr3_button_folder_go.png
+android\res\drawable-hdpi\cr3_button_folder_go_hc.png
+android\res\drawable-hdpi\cr3_button_go_page.png
+android\res\drawable-hdpi\cr3_button_go_page_hc.png
+android\res\drawable-hdpi\cr3_button_go_percent.png
+android\res\drawable-hdpi\cr3_button_go_percent_hc.png
+android\res\drawable-hdpi\cr3_button_inc.png
+android\res\drawable-hdpi\cr3_button_inc_dark.png
+android\res\drawable-hdpi\cr3_button_inc_hc.png
+android\res\drawable-hdpi\cr3_button_inc_light.png
+android\res\drawable-hdpi\cr3_button_inc_white.png
+android\res\drawable-hdpi\cr3_button_info.png
+android\res\drawable-hdpi\cr3_button_info_hc.png
+android\res\drawable-hdpi\cr3_button_light.png
+android\res\drawable-hdpi\cr3_button_light_hc.png
+android\res\drawable-hdpi\cr3_button_log.png
+android\res\drawable-hdpi\cr3_button_log_hc.png
+android\res\drawable-hdpi\cr3_button_more.png
+android\res\drawable-hdpi\cr3_button_more_hc.png
+android\res\drawable-hdpi\cr3_button_next.png
+android\res\drawable-hdpi\cr3_button_next_hc.png
+android\res\drawable-hdpi\cr3_button_ok.png
+android\res\drawable-hdpi\cr3_button_ok_hc.png
+android\res\drawable-hdpi\cr3_button_prev.png
+android\res\drawable-hdpi\cr3_button_prev_hc.png
+android\res\drawable-hdpi\cr3_button_remove.png
+android\res\drawable-hdpi\cr3_button_remove_hc.png
+
+Rate this repository's likely quality from 1 (poor) to 10 (excellent), based only on this surface-level impression. Respond ONLY with valid JSON, no other text, in exactly this shape:
+{"score": <int 1-10>, "reasoning": "<2-3 sentence gut-impression explanation>"}

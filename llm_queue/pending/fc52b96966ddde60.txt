@@ -1,0 +1,26 @@
+You are writing an evidence-based code-quality due-diligence report. Use ONLY the evidence below — do not invent facts not supported by it. Every concern or strength must reference the specific evidence it came from.
+
+Repository: repo_2
+
+Detected languages: [('python', 'pip')]
+
+Build/test evidence: {"attempted": true, "install_ok": true, "tests_ran": false, "test_summary": "\n=========================== short test summary info ===========================\nERROR hl7_client_2_one_test.py - ConnectionRefusedError: [WinError 10061] No ...\n!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 2.16s\n"}
+
+Dependency evidence: {"unpinned_count": 0, "total_declared": 3, "manifest_found": true, "manifest_type": "requirements.txt"}
+
+Docker evidence: {"has_dockerfile": false, "has_compose": false, "build_attempted": false}
+
+Sampled file reviews: [{"readability": "Minimal Flask app defining a single `/a1c` POST route using `request.get_json()`.", "error_handling": "No try-except blocks or payload validation for `request.get_json()`.", "concerns": ["Executes `app.run(port=5000)` directly at module top-level without `if __name__ == '__main__':`."], "notable_strengths": ["Simple mock endpoint returning structured JSON status response."], "file": "fake_endpoint.py"}, {"readability": "Socket server script handling MLLP-wrapped HL7 message parsing via `hl7apy.parser` and Tkinter GUI status display.", "error_handling": "Builds MLLP ACK response messages with error fallbacks for missing HL7 `MSH` header segments.", "concerns": ["Combines Tkinter GUI thread manipulation and socket network listening in global module scope."], "notable_strengths": ["Implements explicit MLLP framing characters (`SB = b'\\x0b'`, `EB = b'\\x1c'`) for reliable network packet parsing."], "file": "hl7_server_Production_DB.py"}]
+
+GitHub activity: {"error": null, "open_issue_count_sampled": 0, "recent_merge_count_sampled": 0}
+
+Score anchor — commit to a band, don't default to the middle:
+9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found
+7-8: Builds and mostly works, only minor gaps, no major red flags
+5-6: Some real risks present but core functionality is demonstrated
+3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths
+1-2: Fundamentally broken, unusable, or dangerous as evidenced
+Two repos with meaningfully different evidence should get meaningfully different scores — don't converge on a 'safe' middle number.
+
+Respond ONLY with JSON in exactly this shape:
+{"score": <int 1-10>, "summary": "<2-3 sentence overall verdict>", "strengths": [{"point": "...", "evidence": "..."}], "risks": [{"point": "...", "evidence": "..."}], "unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}
