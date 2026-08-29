@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+repos/*
+!repos/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+trajectories/*
+!trajectories/.gitkeep

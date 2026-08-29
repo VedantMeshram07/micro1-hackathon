@@ -1,0 +1,35 @@
+# Fixed ground-truth eval set. Pin every repo to a specific commit so results
+# never drift between runs — that's what makes the eval reproducible.
+#
+# Aim for 6-8 repos spanning a real quality range: a couple genuinely
+# well-maintained, a couple mediocre, a couple neglected/risky. Include at
+# least one that looks good on the surface but has a real problem underneath
+# (failing tests, no CI, stale deps) — that's your strongest demo moment.
+#
+# Fill in github_url and pinned_commit for each before running eval/run_eval.py.
+
+repos:
+  - id: repo_1
+    github_url: "https://github.com/patorjk/JavaScript-Snake.git"
+    pinned_commit: "c2f26f9b3aab4c0e14fb54a0213089815c0673af"
+    notes: "small single-file arcade game, picked as a likely mid-tier candidate"
+  - id: repo_2
+    github_url: ""
+    pinned_commit: ""
+    notes: ""
+  - id: repo_3
+    github_url: ""
+    pinned_commit: ""
+    notes: ""
+  - id: repo_4
+    github_url: ""
+    pinned_commit: ""
+    notes: ""
+  - id: repo_5
+    github_url: ""
+    pinned_commit: ""
+    notes: ""
+  - id: repo_6
+    github_url: ""
+    pinned_commit: ""
+    notes: ""

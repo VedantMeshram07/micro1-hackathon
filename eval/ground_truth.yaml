@@ -1,0 +1,15 @@
+# Your own expert ranking of the repos in repos_manifest.yaml, done BLIND —
+# review each repo yourself and rank them BEFORE running baseline or agent
+# on them, so this is honest ground truth and not reverse-engineered from
+# the agent's output.
+#
+# rank 1 = best repo in the set, higher numbers = worse. Every repo in
+# repos_manifest.yaml needs an entry here with a unique rank.
+
+rankings:
+  repo_1: null
+  repo_2: null
+  repo_3: null
+  repo_4: null
+  repo_5: null
+  repo_6: null
