@@ -131,6 +131,9 @@ class LLMClient:
                 base_url="https://api.groq.com/openai/v1",
                 api_key=os.environ.get("GROQ_API_KEY"),
             )
+            # gpt-oss-120b's 200K TPD is the highest of the common free
+            # models — listed first so it's tried before smaller-budget
+            # models. Drop qwen models from default pool as gpt-oss models are well-behaved.
             raw_models = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b,openai/gpt-oss-20b")
 
         else:
@@ -156,7 +159,9 @@ class LLMClient:
             os.makedirs("llm_queue/pending", exist_ok=True)
             os.makedirs("llm_queue/done", exist_ok=True)
 
-            prompt_id = hashlib.sha256(prompt.encode()).hexdigest()[:16]
+            # Normalize transient test collection timing (e.g. "in 0.16s") before hashing
+            normalized_prompt = re.sub(r"in \d+\.\d+s", "in 0.00s", prompt)
+            prompt_id = hashlib.sha256(normalized_prompt.encode()).hexdigest()[:16]
             done_path = os.path.join("llm_queue/done", f"{prompt_id}.txt")
             pending_path = os.path.join("llm_queue/pending", f"{prompt_id}.txt")
 
@@ -164,10 +169,20 @@ class LLMClient:
                 with open(done_path, "r", encoding="utf-8") as f:
                     return f.read()
 
+            # Also check if any existing done file exists for this prompt hash without normalized timing
+            raw_id = hashlib.sha256(prompt.encode()).hexdigest()[:16]
+            raw_done = os.path.join("llm_queue/done", f"{raw_id}.txt")
+            if os.path.exists(raw_done):
+                with open(raw_done, "r", encoding="utf-8") as f:
+                    return f.read()
+
             if not os.path.exists(pending_path):
                 with open(pending_path, "w", encoding="utf-8") as f:
                     f.write(prompt)
 
+            # Not answered yet — return a valid-JSON pending sentinel so
+            # nothing downstream crashes; this call just needs to be
+            # re-run once the coding agent has filled in llm_queue/done/.
             return f'{{"_pending": true, "prompt_id": "{prompt_id}"}}'
 
         last_err = None
@@ -199,14 +214,17 @@ class LLMClient:
                             max_tokens=max_tokens,
                             messages=[{"role": "user", "content": prompt}],
                         )
-                        return resp.choices[0].message.content.strip()
+                        content = resp.choices[0].message.content
+                        if content is None:
+                            raise ValueError("Provider returned empty/null content — likely no model was actually available for this request despite a 200 response")
+                        return content.strip()
                 except Exception as e:
                     last_err = e
                     if "day" in str(e).lower():
                         exhausted_this_model = True
-                        break
+                        break  # stop retrying this model — won't recover within a backoff window
                     if attempt < retries - 1:
-                        time.sleep(2 ** (attempt + 1))
+                        time.sleep(2 ** (attempt + 1))  # 2s, 4s, 8s...
                         continue
 
             if not exhausted_this_model:
@@ -250,6 +268,7 @@ class LLMClient:
     def _mock_response(self, prompt: str, model: str) -> str:
         """Generates realistic mock LLM responses for offline testing."""
         if "bad-model" in model:
+            # Deliberately malformed output with no JSON to test pool advancement
             return "Here's a thinking process: 1. I need to audit this repo. 2. Thinking..."
         if "rate this repository" in prompt.lower():
             return json.dumps({"score": 7, "reasoning": "Mock baseline gut impression: clean file tree and standard README."})

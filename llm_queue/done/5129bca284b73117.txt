@@ -1,0 +1,27 @@
+{
+  "score": 7,
+  "summary": "CoolReader is an active C++/Android e-book reader repository with GPL-2.0 licensing, but contains potential secret findings in production code and lacks automated unit test configuration. Remediation is estimated at 28 total hours (range 20-36h) to rotate hardcoded credentials and establish automated unit testing.",
+  "strengths": [
+    {
+      "point": "Active open-source maintenance and pull request activity",
+      "evidence": "GitHub activity reports 30 open issues sampled and 27 recent merges sampled"
+    },
+    {
+      "point": "Valid open source license compliance",
+      "evidence": "Project LICENSE file found with valid GPL-2.0 license"
+    }
+  ],
+  "risks": [
+    {
+      "point": "Hardcoded secret and credential findings in non-test source files",
+      "evidence": "Secret scan flagged High-entropy string and hardcoded password findings in android\\app\\build.gradle (line 40) and android\\jni\\cr3java.cpp (line 305) with in_test_dir: false"
+    },
+    {
+      "point": "Lack of deep automated build and test integration for C++ ecosystem",
+      "evidence": "Build/test pipeline reported no automated test execution for detected C++ codebase"
+    }
+  ],
+  "unverifiable": [
+    "Native C/C++ compilation and crash handling behavior across all target Android architectures"
+  ]
+}
