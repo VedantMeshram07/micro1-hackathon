@@ -1,5 +1,7 @@
 # Due-Diligence Report: repo_4
 
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
+
 ## Verdict: 7/10 — Est. 15-29 engineer-hours to acquisition-ready
 
 The repository is a Python application with OAuth2 integration and active GitHub maintenance, but fails environment setup/test collection, relies on dependencies with known vulnerabilities, and includes a copyleft license conflict. Remediation is estimated at 22 total hours (range 15-29h) to resolve dependency upgrades, license swapping, and automated testing.
@@ -34,6 +36,9 @@ The repository is a Python application with OAuth2 integration and active GitHub
 - Project license: **not found**
 - Dependencies checked: 11, conflicts: 1, unknown license: 5
   - ⚠️ **gnureadline** — GPL-3.0-or-later (copyleft — legal review recommended)
+
+## 👥 Ownership & Continuity Risk
+- 8 contributor(s), top contributor: 41.9% of commits, last push: 57 days ago
 
 ## ❓ Could Not Verify
 - Containerized runtime deployment and behavior as no Dockerfile or Docker Compose file is present

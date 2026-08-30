@@ -1,8 +1,10 @@
 # Due-Diligence Report: repo_2
 
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
+
 ## Verdict: 5/10 — Est. 6-12 engineer-hours to acquisition-ready
 
-The repository provides a working HL7 socket server and Flask endpoint, but automated test execution fails during collection with ConnectionRefusedError. Additionally, a potential secret finding was detected in non-test production code.
+The repository provides a working HL7 socket server and Flask endpoint, but automated test execution fails during collection with ConnectionRefusedError and production code contains a hardcoded secret finding. Remediation is estimated at 9 total hours (range 6-12h) to address credential rotation and automated testing.
 
 ---
 
@@ -31,6 +33,9 @@ The repository provides a working HL7 socket server and Flask endpoint, but auto
 ## 📄 License
 - Project license: **not found**
 - Dependencies checked: 3, conflicts: 0, unknown license: 1
+
+## 👥 Ownership & Continuity Risk
+- 1 contributor(s), top contributor: 100.0% of commits, last push: 51 days ago
 
 ## ❓ Could Not Verify
 - Docker build and containerized deployment behavior, as no Dockerfile or compose configuration was present

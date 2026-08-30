@@ -1,0 +1,36 @@
+You are writing an evidence-based code-quality due-diligence report. Use ONLY the evidence below — do not invent facts not supported by it. Every concern or strength must reference the specific evidence it came from.
+
+Repository: repo_2
+
+Detected languages: [('python', 'pip')]
+
+Build/test evidence: {"attempted": true, "install_ok": true, "tests_ran": false, "test_summary": "\n=========================== short test summary info ===========================\nERROR hl7_client_2_one_test.py - ConnectionRefusedError: [WinError 10061] No ...\n!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 2.18s\n"}
+
+Dependency evidence: {"unpinned_count": 0, "total_declared": 3, "manifest_found": true, "manifest_type": "requirements.txt"}
+
+Docker evidence: {"has_dockerfile": false, "has_compose": false, "build_attempted": false}
+
+Secret/credential scan (regex + entropy + keyword-context, cross-checked against known cases): {"files_scanned": 7, "findings": [{"file": "hl7_server_Production_DB.py", "line": 134, "type": "High-entropy string (possible secret)", "in_test_dir": false}], "truncated": false}
+
+Dependency vulnerability scan (via OSV.dev, Google's vulnerability database): {"attempted": true, "packages_checked": 3, "vulnerable": [], "vulnerable_count": 0}
+
+License check (project license from local LICENSE file; dependency licenses from PyPI/npm registries — note: PyPI license data is frequently missing, ~78% in calibration testing, this is a known data-source limitation not a red flag): {"project_license": {"found": false, "license": null, "file": null}, "dependency_licenses": {"attempted": true, "checked": 3, "conflicts": [], "unknown_count": 1, "unknown_note": "Missing license data is common on PyPI (~78% in calibration testing) \u2014 not evidence of a problem, but does mean manual review is needed for those packages"}}
+
+Remediation cost estimate (heuristic, engineer-hours to address findings above — cite the total and range in your summary): {"line_items": [{"item": "Rotate 1 hardcoded credential(s) found in production code", "hours": 1, "basis": "1h per finding (rotate + remove from code + wire to secrets manager)"}, {"item": "Stand up a working automated test suite", "hours": 8, "basis": "Flat estimate \u2014 tests did not run successfully during audit"}], "total_hours_estimate": 9, "range_low": 6, "range_high": 12, "disclosure": "Heuristic estimate based on the stated per-item assumptions above, not a professional engineering quote. Presented as a range (6-12h) to avoid false precision. Does not include general code-quality improvements beyond the specific findings listed."}
+
+Sampled file reviews: [{"readability": "Minimal Flask app defining a single `/a1c` POST route using `request.get_json()`.", "error_handling": "No try-except blocks or payload validation for `request.get_json()`.", "concerns": ["Executes `app.run(port=5000)` directly at module top-level without `if __name__ == '__main__':`."], "notable_strengths": ["Simple mock endpoint returning structured JSON status response."], "file": "fake_endpoint.py"}, {"readability": "Socket server script handling MLLP-wrapped HL7 message parsing via `hl7apy.parser` and Tkinter GUI status display.", "error_handling": "Builds MLLP ACK response messages with error fallbacks for missing HL7 `MSH` header segments.", "concerns": ["Combines Tkinter GUI thread manipulation and socket network listening in global module scope."], "notable_strengths": ["Implements explicit MLLP framing characters (`SB = b'\\x0b'`, `EB = b'\\x1c'`) for reliable network packet parsing."], "file": "hl7_server_Production_DB.py"}]
+
+GitHub activity: {"error": null, "open_issue_count_sampled": 0, "recent_merge_count_sampled": 0}
+
+Ownership/bus-factor risk (GitHub contributor concentration + days since last push — flagged only when BOTH signals are bad together, not either alone): {"attempted": true, "error": null, "days_since_last_push": 51, "contributor_count": 1, "top_contributor_share_pct": 100.0, "bus_factor_flag": false}
+
+Score anchor — commit to a band, don't default to the middle:
+9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found
+7-8: Builds and mostly works, only minor gaps, no major red flags
+5-6: Some real risks present but core functionality is demonstrated
+3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths
+1-2: Fundamentally broken, unusable, or dangerous as evidenced
+Two repos with meaningfully different evidence should get meaningfully different scores — don't converge on a 'safe' middle number. HARD REQUIREMENT, not a suggestion: if evidence['secrets']['findings'] contains ANY entry with in_test_dir=false, you MUST include a corresponding entry in 'risks' naming the specific file and finding type — do not omit it, do not summarize it away. If evidence['vulnerabilities']['vulnerable'] is non-empty, you MUST include a corresponding entry in 'risks' naming the specific vulnerable package(s) and citing the vulnerability count. If evidence['license_check']['dependency_licenses']['conflicts'] is non-empty, you MUST include a risk entry naming the conflicting package(s) and their license. If evidence['ownership_risk']['bus_factor_flag'] is true, you MUST include a risk entry citing the top contributor's share percentage and days since last push. Your 'summary' field MUST include the remediation_estimate's total_hours_estimate and range — a report that gathers this evidence and then doesn't mention it is a failure of this task, regardless of what score you land on. Findings inside test directories (in_test_dir: true) are lower priority and may be mentioned briefly or omitted if space-constrained.
+
+Respond ONLY with JSON in exactly this shape:
+{"score": <int 1-10>, "summary": "<2-3 sentence overall verdict>", "strengths": [{"point": "...", "evidence": "..."}], "risks": [{"point": "...", "evidence": "..."}], "unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}

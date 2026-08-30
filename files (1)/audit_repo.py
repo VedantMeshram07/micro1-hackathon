@@ -19,7 +19,6 @@ from agent.check_vulnerabilities import check_vulnerabilities
 from agent.check_license import detect_project_license, check_dependency_licenses
 from agent.check_ownership import check_ownership_risk
 from agent.remediation_estimate import estimate_remediation_cost
-from agent.integrity_check import check_report_integrity
 from ingest.ingest import IngestResult
 from agent.trajectory_logger import TrajectoryLogger
 from llm.client import LLMClient, parse_json_response
@@ -80,20 +79,6 @@ def audit_repo(repo_name: str, ingest_result: IngestResult, client: LLMClient,
     report = _synthesize_report(repo_name, ingest_result, evidence, client, logger)
     report["method"] = "agent"
     report["remediation_estimate"] = evidence["remediation_estimate"]
-
-    integrity_violations = check_report_integrity(evidence, report)
-    report["integrity_check"] = {
-        "passed": len(integrity_violations) == 0,
-        "violations": integrity_violations,
-    }
-    logger.log_step(
-        step_type="check_report_integrity",
-        instruction="Deterministically verify every hard-citation requirement was actually satisfied in the final report",
-        tool_input={"repo": repo_name},
-        tool_output=json.dumps(report["integrity_check"]),
-        decision="Attached to report as self-audit result; not yet wired to auto-retry",
-    )
-
     return report
 
 

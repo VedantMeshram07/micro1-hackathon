@@ -1,5 +1,7 @@
 # Due-Diligence Report: repo_1
 
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
+
 ## Verdict: 6/10 — Est. 6-10 engineer-hours to acquisition-ready
 
 JavaScript Snake is a browser game repository with clean package installation and zero detected security vulnerabilities, but lacks an automated test suite. Remediation is estimated at 8 total hours (range 6-10h) to stand up proper automated testing.
@@ -26,11 +28,14 @@ JavaScript Snake is a browser game repository with clean package installation an
 ## ✅ Strengths
 - **Clean package installation and open source license compliance** — _npm install succeeded with valid MIT license and zero dependency license conflicts_
 - **No credential leaks or known dependency vulnerabilities** — _Secret scan and OSV vulnerability scan found zero findings across all scanned files and packages_
-- **Active repository maintenance history** — _GitHub activity shows 16 open issues sampled and 16 recent merges sampled_
+- **Active repository maintenance history** — _GitHub activity shows 35 days since last push with 28 contributors_
 
 ## 📄 License
 - Project license: **MIT** (`LICENSE`)
 - Dependencies checked: 2, conflicts: 0, unknown license: 0
+
+## 👥 Ownership & Continuity Risk
+- 28 contributor(s), top contributor: 51.2% of commits, last push: 35 days ago
 
 ## ❓ Could Not Verify
 - Containerized runtime execution as no Dockerfile or Docker Compose configuration was present

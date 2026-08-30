@@ -1,5 +1,7 @@
 # Due-Diligence Report: repo_5
 
+⚠️ *Self-audit flagged 18 finding(s) present in the underlying evidence but not reflected below — see the full JSON report for details.*
+
 ## Verdict: 10/10 — Est. 20-36 engineer-hours to acquisition-ready
 
 Pydantic is a production-grade Python data validation library with extensive maintenance and clean MIT licensing, though test execution failed due to missing benchmark flags. Remediation is estimated at 28 total hours (range 20-36h) to address credential rotation in documentation files and test harness setup.
@@ -24,13 +26,16 @@ Pydantic is a production-grade Python data validation library with extensive mai
 - **Test execution halted due to missing benchmark CLI options** — _Build/test summary reports pytest failure on unrecognized arguments --benchmark-columns_
 
 ## ✅ Strengths
-- **Active open-source community maintenance** — _GitHub activity shows 30 open issues sampled and 18 recent merges sampled_
+- **Active open-source community maintenance** — _GitHub activity shows 30 open issues sampled and 18 recent merges sampled with 100 contributors_
 - **Zero dependency vulnerability findings and valid project license** — _Clean MIT license found with 0 dependency vulnerability alerts across checked packages_
 - **High code quality and static typing** — _Sampled file review for docs\plugins\conversion_table.py shows clean use of Python dataclasses and explicit type annotations_
 
 ## 📄 License
 - Project license: **MIT** (`LICENSE`)
 - Dependencies checked: 0, conflicts: 0, unknown license: 0
+
+## 👥 Ownership & Continuity Risk
+- 100 contributor(s), top contributor: 23.8% of commits, last push: 1 days ago
 
 ## ❓ Could Not Verify
 - Containerized runtime environment as no Dockerfile or Docker Compose configuration was present

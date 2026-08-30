@@ -1,5 +1,7 @@
 # Due-Diligence Report: repo_6
 
+⚠️ *Self-audit flagged 16 finding(s) present in the underlying evidence but not reflected below — see the full JSON report for details.*
+
 ## Verdict: 7/10 — Est. 20-36 engineer-hours to acquisition-ready
 
 CoolReader is an active C++/Android e-book reader repository with GPL-2.0 licensing, but contains potential secret findings in production code and lacks automated unit test configuration. Remediation is estimated at 28 total hours (range 20-36h) to rotate hardcoded credentials and establish automated unit testing.
@@ -29,6 +31,9 @@ CoolReader is an active C++/Android e-book reader repository with GPL-2.0 licens
 
 ## 📄 License
 - Project license: **GPL-2.0** (`LICENSE`)
+
+## 👥 Ownership & Continuity Risk
+- 45 contributor(s), top contributor: 43.7% of commits, last push: 31 days ago
 
 ## ❓ Could Not Verify
 - Native C/C++ compilation and crash handling behavior across all target Android architectures

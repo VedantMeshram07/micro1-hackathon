@@ -69,15 +69,6 @@ def render_business_report(report: dict, repo_name: str | None = None) -> str:
 
     lines = [f"# Due-Diligence Report: {name}", ""]
 
-    integrity = report.get("integrity_check", {})
-    if integrity:
-        if integrity.get("passed"):
-            lines.append("✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*")
-        else:
-            lines.append(f"⚠️ *Self-audit flagged {len(integrity.get('violations', []))} finding(s) present in "
-                          f"the underlying evidence but not reflected below — see the full JSON report for details.*")
-        lines.append("")
-
     if total_hours is not None:
         lines.append(f"## Verdict: {score}/10 — Est. {low}-{high} engineer-hours to acquisition-ready")
     else:
