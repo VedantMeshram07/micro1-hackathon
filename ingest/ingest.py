@@ -130,8 +130,11 @@ def _clone_github(url: str, dest_root: str, pinned_commit: str | None) -> str:
                         text=True, cwd=dest, timeout=30, env=git_env)
         subprocess.run(["git", "remote", "add", "origin", url], check=True,
                         capture_output=True, text=True, cwd=dest, timeout=30, env=git_env)
-        subprocess.run(["git", "fetch", "--quiet", "--depth", "1", "origin", pinned_commit],
-                        check=True, capture_output=True, text=True, cwd=dest, timeout=180, env=git_env)
+        fetch_res = subprocess.run(["git", "fetch", "--quiet", "--depth", "1", "origin", pinned_commit],
+                        capture_output=True, text=True, cwd=dest, timeout=180, env=git_env)
+        if fetch_res.returncode != 0:
+            subprocess.run(["git", "fetch", "--quiet", "origin", pinned_commit],
+                            check=True, capture_output=True, text=True, cwd=dest, timeout=180, env=git_env)
         subprocess.run(["git", "checkout", "--quiet", "FETCH_HEAD"], check=True,
                         capture_output=True, text=True, cwd=dest, timeout=30, env=git_env)
     else:

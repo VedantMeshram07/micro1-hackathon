@@ -1,0 +1,30 @@
+You are writing an evidence-based code-quality due-diligence report. Use ONLY the evidence below — do not invent facts not supported by it. Every concern or strength must reference the specific evidence it came from.
+
+Repository: repo_1
+
+Detected languages: [('javascript/typescript', 'npm')]
+
+Build/test evidence: {"attempted": true, "install_ok": true, "tests_ran": false, "test_summary": "\n> javascript-snake@1.0.0 test\n> echo \"Error: no test specified\" && exit 1\n\n\"Error: no test specified\" \n"}
+
+Dependency evidence: {"unpinned_count": 2, "total_declared": 2, "manifest_found": true, "manifest_type": "package.json"}
+
+Docker evidence: {"has_dockerfile": false, "has_compose": false, "build_attempted": false}
+
+Secret/credential scan (regex + entropy + keyword-context, cross-checked against known cases): {"files_scanned": 40, "findings": [], "truncated": false}
+
+Dependency vulnerability scan (via OSV.dev, Google's vulnerability database): {"attempted": true, "packages_checked": 2, "vulnerable": [], "vulnerable_count": 0}
+
+Sampled file reviews: [{"_pending": true, "prompt_id": "3cb9c8b8f3d90105", "file": "src\\js\\ai-init.js"}, {"_pending": true, "prompt_id": "f25bbcca676e5068", "file": "src\\js\\init.js"}, {"_pending": true, "prompt_id": "51f7f07597e68bd5", "file": "src\\js\\snake.js"}]
+
+GitHub activity: {"error": null, "open_issue_count_sampled": 16, "recent_merge_count_sampled": 16}
+
+Score anchor — commit to a band, don't default to the middle:
+9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found
+7-8: Builds and mostly works, only minor gaps, no major red flags
+5-6: Some real risks present but core functionality is demonstrated
+3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths
+1-2: Fundamentally broken, unusable, or dangerous as evidenced
+Two repos with meaningfully different evidence should get meaningfully different scores — don't converge on a 'safe' middle number. Any hardcoded secret found, or any dependency with a known vulnerability, is a serious concrete risk — weigh these heavily toward a lower score, not as a minor style note. Findings inside test directories (in_test_dir: true) are lower priority than the same finding in production code, but still worth a brief mention.
+
+Respond ONLY with JSON in exactly this shape:
+{"score": <int 1-10>, "summary": "<2-3 sentence overall verdict>", "strengths": [{"point": "...", "evidence": "..."}], "risks": [{"point": "...", "evidence": "..."}], "unverifiable": ["<anything the pipeline could not check for this repo, and why>"]}

@@ -14,6 +14,10 @@ import subprocess
 
 import requests
 
+from agent.scan_secrets import scan_for_secrets
+from agent.check_vulnerabilities import check_vulnerabilities
+from agent.check_license import detect_project_license, check_dependency_licenses
+from agent.remediation_estimate import estimate_remediation_cost
 from ingest.ingest import IngestResult
 from agent.trajectory_logger import TrajectoryLogger
 from llm.client import LLMClient, parse_json_response
@@ -36,11 +40,35 @@ def audit_repo(repo_name: str, ingest_result: IngestResult, client: LLMClient,
     evidence["build_test"] = _run_build_and_tests(ingest_result, logger)
     evidence["dependencies"] = _check_dependencies(ingest_result, logger)
     evidence["docker"] = _check_docker(ingest_result, logger)
+    evidence["secrets"] = scan_for_secrets(ingest_result.local_path)
+    evidence["vulnerabilities"] = check_vulnerabilities(ingest_result.local_path, ingest_result.languages)
+    evidence["license_check"] = {
+        "project_license": detect_project_license(ingest_result.local_path),
+        "dependency_licenses": check_dependency_licenses(ingest_result.local_path, ingest_result.languages),
+    }
     evidence["code_review"] = _sample_code_review(ingest_result, client, logger)
     evidence["activity"] = _mine_github_activity(github_url, github_token, logger) if github_url else None
+    evidence["remediation_estimate"] = estimate_remediation_cost(evidence)
+
+    logger.log_step(
+        step_type="scan_secrets_and_vulnerabilities",
+        instruction="Run deterministic secret scan and OSV.dev dependency vulnerability check",
+        tool_input={"repo": ingest_result.local_path},
+        tool_output=json.dumps({"secrets": evidence["secrets"], "vulnerabilities": evidence["vulnerabilities"]})[:2000],
+        decision="Feed into synthesis as hard, evidence-backed risk signals",
+    )
+
+    logger.log_step(
+        step_type="check_license_and_estimate_remediation",
+        instruction="Check project/dependency license conflicts and estimate remediation cost from all gathered evidence",
+        tool_input={"repo": ingest_result.local_path},
+        tool_output=json.dumps({"license_check": evidence["license_check"], "remediation_estimate": evidence["remediation_estimate"]})[:2000],
+        decision="Feed into synthesis; remediation estimate also surfaced at top level of the final report",
+    )
 
     report = _synthesize_report(repo_name, ingest_result, evidence, client, logger)
     report["method"] = "agent"
+    report["remediation_estimate"] = evidence["remediation_estimate"]
     return report
 
 
@@ -322,6 +350,10 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         f"Build/test evidence: {json.dumps(evidence['build_test'])}\n\n"
         f"Dependency evidence: {json.dumps(evidence['dependencies'])}\n\n"
         f"Docker evidence: {json.dumps(evidence['docker'])}\n\n"
+        f"Secret/credential scan (regex + entropy + keyword-context, cross-checked against known cases): {json.dumps(evidence['secrets'])}\n\n"
+        f"Dependency vulnerability scan (via OSV.dev, Google's vulnerability database): {json.dumps(evidence['vulnerabilities'])}\n\n"
+        f"License check (project license from local LICENSE file; dependency licenses from PyPI/npm registries — note: PyPI license data is frequently missing, ~78% in calibration testing, this is a known data-source limitation not a red flag): {json.dumps(evidence['license_check'])}\n\n"
+        f"Remediation cost estimate (heuristic, engineer-hours to address findings above — cite the total and range in your summary): {json.dumps(evidence['remediation_estimate'])}\n\n"
         f"Sampled file reviews: {json.dumps(evidence['code_review'])}\n\n"
         f"GitHub activity: {json.dumps(evidence['activity'])}\n\n"
         "Score anchor — commit to a band, don't default to the middle:\n"
@@ -331,7 +363,17 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         "3-4: Significant risks (failed build/tests, undefined behavior, security issues) outweigh strengths\n"
         "1-2: Fundamentally broken, unusable, or dangerous as evidenced\n"
         "Two repos with meaningfully different evidence should get meaningfully different scores — "
-        "don't converge on a 'safe' middle number.\n\n"
+        "don't converge on a 'safe' middle number. HARD REQUIREMENT, not a suggestion: if "
+        "evidence['secrets']['findings'] contains ANY entry with in_test_dir=false, you MUST include "
+        "a corresponding entry in 'risks' naming the specific file and finding type — do not omit it, "
+        "do not summarize it away. If evidence['vulnerabilities']['vulnerable'] is non-empty, you MUST "
+        "include a corresponding entry in 'risks' naming the specific vulnerable package(s) and citing "
+        "the vulnerability count. If evidence['license_check']['dependency_licenses']['conflicts'] is "
+        "non-empty, you MUST include a risk entry naming the conflicting package(s) and their license. "
+        "Your 'summary' field MUST include the remediation_estimate's total_hours_estimate and range — "
+        "a report that gathers this evidence and then doesn't mention it is a failure of this task, "
+        "regardless of what score you land on. Findings inside test directories "
+        "(in_test_dir: true) are lower priority and may be mentioned briefly or omitted if space-constrained.\n\n"
         "Respond ONLY with JSON in exactly this shape:\n"
         '{"score": <int 1-10>, '
         '"summary": "<2-3 sentence overall verdict>", '
@@ -341,7 +383,11 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
     )
 
     try:
-        report = client.complete_json(prompt, max_tokens=2500)
+        # Bumped from 2500: adding license-conflict and remediation-estimate
+        # citation requirements grew the required response content —
+        # verified truncation was the actual cause of a correlation crash
+        # tonight (0.971 -> 0.152) once those requirements were added.
+        report = client.complete_json(prompt, max_tokens=3500)
     except ValueError as e:
         report = {"score": None, "summary": str(e),
                    "strengths": [], "risks": [], "unverifiable": []}
