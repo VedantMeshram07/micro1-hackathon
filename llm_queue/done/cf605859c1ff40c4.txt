@@ -1,0 +1,44 @@
+{
+  "score": 9,
+  "summary": "repo_5 (Pydantic) is an actively maintained Python validation library with MIT license and 0 vulnerable packages, though test execution failed due to unrecognized pytest benchmark arguments. Secret scan identified hardcoded password findings in production and doc files including docs\\concepts\\serialization.md, docs\\examples\\secrets.md, docs\\examples\\validators.md. Total remediation cost is estimated at 28 hours (range 20-36h).",
+  "strengths": [
+    {
+      "point": "Highly active maintenance with recent commits and merges.",
+      "evidence": "GitHub activity: days_since_last_push: 1, recent_merge_count_sampled: 18."
+    },
+    {
+      "point": "MIT project license with no dependency license conflicts.",
+      "evidence": "License check: project_license: {found: true, license: MIT}, conflicts: []."
+    }
+  ],
+  "risks": [
+    {
+      "point": "Hardcoded credential / secret finding detected in non-test file docs\\concepts\\serialization.md.",
+      "evidence": "Secret scan: file docs\\concepts\\serialization.md line 416 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded credential / secret finding detected in non-test file docs\\examples\\secrets.md.",
+      "evidence": "Secret scan: file docs\\examples\\secrets.md line 25 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded credential / secret finding detected in non-test file docs\\examples\\validators.md.",
+      "evidence": "Secret scan: file docs\\examples\\validators.md line 213 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded credential / secret finding detected in non-test file docs\\plugins\\using.toml.",
+      "evidence": "Secret scan: file docs\\plugins\\using.toml line 71 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded credential / secret finding detected in non-test file pydantic\\types.py.",
+      "evidence": "Secret scan: file pydantic\\types.py line 1695 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Automated tests failed to run due to unrecognized test runner arguments.",
+      "evidence": "Build/test evidence: tests_ran: false, error: unrecognized arguments: --benchmark-columns."
+    }
+  ],
+  "unverifiable": [
+    "Dependency vulnerability scan details because packages_checked was 0.",
+    "Container configuration because Dockerfile is absent."
+  ]
+}

@@ -17,7 +17,9 @@ import requests
 from agent.scan_secrets import scan_for_secrets
 from agent.check_vulnerabilities import check_vulnerabilities
 from agent.check_license import detect_project_license, check_dependency_licenses
+from agent.check_ownership import check_ownership_risk
 from agent.remediation_estimate import estimate_remediation_cost
+from agent.integrity_check import check_report_integrity
 from ingest.ingest import IngestResult
 from agent.trajectory_logger import TrajectoryLogger
 from llm.client import LLMClient, parse_json_response
@@ -48,6 +50,7 @@ def audit_repo(repo_name: str, ingest_result: IngestResult, client: LLMClient,
     }
     evidence["code_review"] = _sample_code_review(ingest_result, client, logger)
     evidence["activity"] = _mine_github_activity(github_url, github_token, logger) if github_url else None
+    evidence["ownership_risk"] = check_ownership_risk(github_url, github_token) if github_url else {"attempted": False, "reason": "No GitHub URL provided"}
     evidence["remediation_estimate"] = estimate_remediation_cost(evidence)
 
     logger.log_step(
@@ -66,9 +69,31 @@ def audit_repo(repo_name: str, ingest_result: IngestResult, client: LLMClient,
         decision="Feed into synthesis; remediation estimate also surfaced at top level of the final report",
     )
 
+    logger.log_step(
+        step_type="check_ownership_risk",
+        instruction="Check bus-factor and maintenance-abandonment risk via GitHub contributor/push data",
+        tool_input={"github_url": github_url},
+        tool_output=json.dumps(evidence["ownership_risk"])[:1000],
+        decision="Flag as risk when high commit concentration coincides with a long push gap",
+    )
+
     report = _synthesize_report(repo_name, ingest_result, evidence, client, logger)
     report["method"] = "agent"
     report["remediation_estimate"] = evidence["remediation_estimate"]
+
+    integrity_violations = check_report_integrity(evidence, report)
+    report["integrity_check"] = {
+        "passed": len(integrity_violations) == 0,
+        "violations": integrity_violations,
+    }
+    logger.log_step(
+        step_type="check_report_integrity",
+        instruction="Deterministically verify every hard-citation requirement was actually satisfied in the final report",
+        tool_input={"repo": repo_name},
+        tool_output=json.dumps(report["integrity_check"]),
+        decision="Attached to report as self-audit result; not yet wired to auto-retry",
+    )
+
     return report
 
 
@@ -356,6 +381,7 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         f"Remediation cost estimate (heuristic, engineer-hours to address findings above — cite the total and range in your summary): {json.dumps(evidence['remediation_estimate'])}\n\n"
         f"Sampled file reviews: {json.dumps(evidence['code_review'])}\n\n"
         f"GitHub activity: {json.dumps(evidence['activity'])}\n\n"
+        f"Ownership/bus-factor risk (GitHub contributor concentration + days since last push — flagged only when BOTH signals are bad together, not either alone): {json.dumps(evidence['ownership_risk'])}\n\n"
         "Score anchor — commit to a band, don't default to the middle:\n"
         "9-10: Builds cleanly, real passing tests, active maintenance, no significant risks found\n"
         "7-8: Builds and mostly works, only minor gaps, no major red flags\n"
@@ -370,6 +396,8 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         "include a corresponding entry in 'risks' naming the specific vulnerable package(s) and citing "
         "the vulnerability count. If evidence['license_check']['dependency_licenses']['conflicts'] is "
         "non-empty, you MUST include a risk entry naming the conflicting package(s) and their license. "
+        "If evidence['ownership_risk']['bus_factor_flag'] is true, you MUST include a risk entry citing "
+        "the top contributor's share percentage and days since last push. "
         "Your 'summary' field MUST include the remediation_estimate's total_hours_estimate and range — "
         "a report that gathers this evidence and then doesn't mention it is a failure of this task, "
         "regardless of what score you land on. Findings inside test directories "
@@ -387,7 +415,7 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         # citation requirements grew the required response content —
         # verified truncation was the actual cause of a correlation crash
         # tonight (0.971 -> 0.152) once those requirements were added.
-        report = client.complete_json(prompt, max_tokens=3500)
+        report = client.complete_json(prompt, max_tokens=5000)
     except ValueError as e:
         report = {"score": None, "summary": str(e),
                    "strengths": [], "risks": [], "unverifiable": []}

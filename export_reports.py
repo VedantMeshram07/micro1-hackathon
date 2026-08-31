@@ -1,6 +1,6 @@
 """
-Generates a polished business-report .md file for every agent report in
-data/reports/, into reports_export/. Run after eval.run_eval completes.
+Generates a polished business-report .md AND .pdf for every agent report
+in data/reports/, into reports_export/. Run after eval.run_eval completes.
 
 Usage: python export_reports.py
 """
@@ -10,6 +10,7 @@ import json
 import os
 
 from report.generate_report import render_business_report
+from report.generate_pdf import render_pdf_report
 
 OUTPUT_DIR = "reports_export"
 
@@ -31,12 +32,16 @@ def main():
             continue
 
         repo_id = os.path.basename(path).replace("__agent.json", "")
-        markdown = render_business_report(report, repo_id)
 
-        out_path = os.path.join(OUTPUT_DIR, f"{repo_id}.md")
-        with open(out_path, "w", encoding="utf-8") as f:
+        markdown = render_business_report(report, repo_id)
+        md_path = os.path.join(OUTPUT_DIR, f"{repo_id}.md")
+        with open(md_path, "w", encoding="utf-8") as f:
             f.write(markdown)
-        print(f"Wrote {out_path}")
+        print(f"Wrote {md_path}")
+
+        pdf_path = os.path.join(OUTPUT_DIR, f"{repo_id}.pdf")
+        render_pdf_report(report, repo_id, pdf_path)
+        print(f"Wrote {pdf_path}")
 
     print(f"\nDone. {len(agent_reports)} report(s) processed into {OUTPUT_DIR}/")
 

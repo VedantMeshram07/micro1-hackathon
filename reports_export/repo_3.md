@@ -1,8 +1,10 @@
 # Due-Diligence Report: repo_3
 
-## Verdict: 5/10 — Est. 6-10 engineer-hours to acquisition-ready
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
 
-Process-Scheduler provides basic C++ CPU scheduling algorithm implementations, but lacks build/test integration, dependency manifests, and project licensing. Remediation is estimated at 8 total hours (range 6-10h) to establish automated testing.
+## Verdict: 4/10 — Est. 34-62 engineer-hours to acquisition-ready
+
+repo_3 is an academic C++ process scheduling simulator with no build system, no dependency manifest, and no automated tests. Bus-factor risk is present with top contributor share at 100.0% and 243 days since last push. Total remediation cost is estimated at 48 hours (range 34-62h).
 
 ---
 
@@ -11,27 +13,32 @@ Process-Scheduler provides basic C++ CPU scheduling algorithm implementations, b
 | Item | Hours | Basis |
 |---|---|---|
 | Stand up a working automated test suite | 8 | Flat estimate — tests did not run successfully during audit |
+| Knowledge-transfer risk: safely onboard a new team onto this codebase | 40 | Flat estimate — 100.0% of commits from one contributor, no push in 243 days (bus-factor risk, not a code defect) |
 
-**Total: 8 hours (range: 6-10h)**
+**Total: 48 hours (range: 34-62h)**
 
-> Heuristic estimate based on the stated per-item assumptions above, not a professional engineering quote. Presented as a range (6-10h) to avoid false precision. Does not include general code-quality improvements beyond the specific findings listed.
+> Heuristic estimate based on the stated per-item assumptions above, not a professional engineering quote. Presented as a range (34-62h) to avoid false precision. Does not include general code-quality improvements beyond the specific findings listed.
 
 ---
 
 ## ⚠️ Risks
-- **Lack of automated test runner or build system** — _Build/test pipeline reported no test runner configured for detected C++ files_
-- **Buffer overflow and non-standard syntax risks in source code** — _File reviews for scheduler.cpp and priority.cpp note fixed array bounds (bt[10]) buffer overflow risks and non-standard C-style variable length arrays_
-- **Missing project license specification** — _License check found no local LICENSE file in the repository_
+- **Bus-factor risk: top contributor holds 100.0% of commits and last push was 243 days ago.** — _Ownership risk: top_contributor_share_pct: 100.0, days_since_last_push: 243, bus_factor_flag: true._
+- **No automated build or test support available.** — _Build/test evidence: attempted: false, reason: No deep build/test support for detected language(s)._
 
 ## ✅ Strengths
-- **Demonstrates multiple CPU scheduling algorithms** — _Source files implement Round Robin, FCFS, Priority, and Shortest Job First scheduling models with clear tabular output_
-- **Zero external dependency footprint** — _Uses standard C++ libraries without third-party library dependencies_
+- **No secret findings detected in scanned files.** — _Secret scan: findings: [], files_scanned: 6._
+- **README documents educational scope clearly.** — _README states academic and learning project purpose._
 
 ## 📄 License
 - Project license: **not found**
 
+## 👥 Ownership & Continuity Risk
+- 1 contributor(s), top contributor: 100.0% of commits, last push: 243 days ago
+  - ⚠️ **Bus-factor risk**: commit history is highly concentrated in one contributor and the repo has gone quiet — factor in onboarding time for a new team.
+
 ## ❓ Could Not Verify
-- Automated test coverage and compilation behavior as no C++ build configuration (CMake/Makefile) was detected
+- Build/test correctness because language is not supported by pipeline.
+- Dependency vulnerabilities because no manifest was found.
 
 ---
 *Every claim above is backed by evidence in the full JSON report — this is a summary view, not a separate assessment.*

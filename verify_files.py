@@ -17,6 +17,13 @@ CHECKS = [
     ("agent/scan_secrets.py", "LOCK_FILE_NAMES", "Lock-file exclusion fix present"),
     ("report/generate_report.py", "render_business_report", "Business report renderer exists"),
     ("llm/client.py", "parse_failures", "complete_json retry-before-advance fix present"),
+    ("agent/check_ownership.py", "check_ownership_risk", "Ownership/bus-factor checker exists"),
+    ("agent/audit_repo.py", "ownership_risk", "Ownership risk wired into evidence + prompt"),
+    ("agent/remediation_estimate.py", "HOURS_FOR_KNOWLEDGE_TRANSFER", "Bus-factor remediation line item present"),
+    ("report/generate_report.py", "Ownership & Continuity Risk", "Ownership section in business report"),
+    ("agent/integrity_check.py", "check_report_integrity", "Self-audit integrity checker exists"),
+    ("agent/audit_repo.py", "integrity_check", "Integrity check wired into report output"),
+    ("report/generate_report.py", "Self-audit passed", "Integrity badge in business report"),
 ]
 
 print(f"{'FILE':<35} {'CHECK':<50} RESULT")

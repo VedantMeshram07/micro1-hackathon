@@ -1,1 +1,4 @@
-{"score": 10, "reasoning": "Production-grade Python data validation library with extensive badges, clear installation instructions, type annotation examples, and active Open Source / commercial backing."}
+{
+  "score": 10,
+  "reasoning": "Top-tier open-source Python library with extensive documentation and pristine codebase."
+}

@@ -1,1 +1,4 @@
-{"score": 7, "reasoning": "Classic DOM-based Snake game written in plain JavaScript with zero runtime dependencies. Clear instructions for running with npx parcel src/index.html and online sandbox links."}
+{
+  "score": 7,
+  "reasoning": "Classic vanilla JS browser game, clean structure and README instructions."
+}

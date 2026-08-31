@@ -1,8 +1,10 @@
 # Due-Diligence Report: repo_4
 
-## Verdict: 7/10 — Est. 15-29 engineer-hours to acquisition-ready
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
 
-The repository is a Python application with OAuth2 integration and active GitHub maintenance, but fails environment setup/test collection, relies on dependencies with known vulnerabilities, and includes a copyleft license conflict. Remediation is estimated at 22 total hours (range 15-29h) to resolve dependency upgrades, license swapping, and automated testing.
+## Verdict: 4/10 — Est. 15-29 engineer-hours to acquisition-ready
+
+repo_4 installs successfully but test collection fails due to an import error. 5 vulnerable packages were detected across 64 CVEs, and 1 copyleft license conflict was found in gnureadline. Total remediation cost is estimated at 22 hours (range 15-29h).
 
 ---
 
@@ -21,22 +23,29 @@ The repository is a Python application with OAuth2 integration and active GitHub
 ---
 
 ## ⚠️ Risks
-- **Multiple declared dependencies contain known security vulnerabilities** — _Dependency vulnerability scan identified 5 vulnerable packages with 64 total CVEs: Flask (8 vulns), Jinja2 (14 vulns), Werkzeug (24 vulns), requests (12 vulns), and gunicorn (6 vulns)_
-- **Environment installation and test suite collection failed** — _Build/test evidence shows install_ok: false and 1 error during collection in test/test_endpoints.py_
-- **Copyleft license conflict in declared dependencies** — _License check identified gnureadline package with GPL-3.0-or-later license conflict_
+- **Vulnerable dependency package Flask identified with 8 vulnerability findings.** — _Vulnerability scan: package Flask version 0.10.1 has vulnerability count 8._
+- **Vulnerable dependency package Jinja2 identified with 14 vulnerability findings.** — _Vulnerability scan: package Jinja2 version 2.7.3 has vulnerability count 14._
+- **Vulnerable dependency package Werkzeug identified with 24 vulnerability findings.** — _Vulnerability scan: package Werkzeug version 0.9.6 has vulnerability count 24._
+- **Vulnerable dependency package requests identified with 12 vulnerability findings.** — _Vulnerability scan: package requests version 2.3.0 has vulnerability count 12._
+- **Vulnerable dependency package gunicorn identified with 6 vulnerability findings.** — _Vulnerability scan: package gunicorn version 18.0 has vulnerability count 6._
+- **License conflict: package gnureadline uses copyleft license GPL-3.0-or-later.** — _License check: conflicts: [{package: gnureadline, license: GPL-3.0-or-later}]._
+- **Test suite collection failed.** — _Build/test evidence: install_ok: false, tests_ran: false, ERROR test/test_endpoints.py._
 
 ## ✅ Strengths
-- **Enforces security best practices in application setup** — _app.py enforces SSL via SSLify(app) and generates dynamic Flask secret keys using os.urandom(24)_
-- **Active project maintenance and issue tracking** — _GitHub activity indicates 20 open issues sampled and 13 recent merges sampled_
-- **All declared dependencies are explicitly pinned** — _requirements.txt contains 11 declared packages with 0 unpinned dependencies_
+- **All 11 declared dependencies are pinned.** — _Dependency evidence: unpinned_count: 0, total_declared: 11, manifest_type: requirements.txt._
+- **Active GitHub issue and merge activity.** — _GitHub activity: open_issue_count_sampled: 20, recent_merge_count_sampled: 13._
 
 ## 📄 License
 - Project license: **not found**
 - Dependencies checked: 11, conflicts: 1, unknown license: 5
   - ⚠️ **gnureadline** — GPL-3.0-or-later (copyleft — legal review recommended)
 
+## 👥 Ownership & Continuity Risk
+- 8 contributor(s), top contributor: 41.9% of commits, last push: 58 days ago
+
 ## ❓ Could Not Verify
-- Containerized runtime deployment and behavior as no Dockerfile or Docker Compose file is present
+- Project license terms because project_license found is false.
+- 5 dependency licenses due to missing PyPI metadata.
 
 ---
 *Every claim above is backed by evidence in the full JSON report — this is a summary view, not a separate assessment.*

@@ -1,1 +1,12 @@
-{"readability": "JNI wrapper mapping CoffeeCatch signal handler functions to Android Java native methods.", "error_handling": "Checks JNI environment `env` pointer and surfaces C crash messages to Java strings.", "concerns": ["Manual string conversions between C `char*` and Java `jstring` without memory leak checks."], "notable_strengths": ["Allows Android applications to catch native C/C++ segmentation faults without crashing JVM."]}
+{
+  "readability": "Well-structured JNI C code with clear helper functions.",
+  "error_handling": "Uses assert() to verify FindClass/GetMethodID calls.",
+  "concerns": [
+    "bt_print and bt_addr call strdup() without freeing in caller, leaking memory.",
+    "(*env)->ThrowNew passes strdup'd string, causing memory leak."
+  ],
+  "notable_strengths": [
+    "BSD-2-Clause license header complete.",
+    "Architecturally sound JNI exception pattern."
+  ]
+}

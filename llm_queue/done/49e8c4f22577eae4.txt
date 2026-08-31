@@ -1,1 +1,4 @@
-{"score": 8, "reasoning": "Official Uber sample Flask application showcasing API endpoints and OAuth structure. Clean directory layout with pinned requirements.txt dependencies, Travis CI integration, and mock test fixtures."}
+{
+  "score": 8,
+  "reasoning": "Official Uber sample Flask application structure with good documentation."
+}
