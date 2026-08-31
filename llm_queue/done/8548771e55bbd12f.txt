@@ -1,1 +1,4 @@
-{"score": 7, "reasoning": "Established cross-platform e-book reader supporting multiple GUI frontends (Qt5, wxWidgets, CR3GUI) and Android JNI. Includes clear build instructions for system dependencies like freetype, harfbuzz, and zlib."}
+{
+  "score": 7,
+  "reasoning": "Established cross-platform e-book reader, complex multi-platform codebase."
+}

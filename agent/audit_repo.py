@@ -415,7 +415,7 @@ def _synthesize_report(repo_name: str, ingest_result: IngestResult, evidence: di
         # citation requirements grew the required response content —
         # verified truncation was the actual cause of a correlation crash
         # tonight (0.971 -> 0.152) once those requirements were added.
-        report = client.complete_json(prompt, max_tokens=3500)
+        report = client.complete_json(prompt, max_tokens=5000)
     except ValueError as e:
         report = {"score": None, "summary": str(e),
                    "strengths": [], "risks": [], "unverifiable": []}

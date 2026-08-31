@@ -244,7 +244,29 @@ class LLMClient:
         just one bad response wastes good capacity for no reason. Only
         permanently advances self._model_index after the current model has
         failed to produce valid JSON `retries` times in a row. (Quota-driven
-        advancement inside complete() is separate and unaffected by this.)"""
+        advancement inside complete() is separate and unaffected by this.)
+
+        BUG FIX (found live, reproduced empirically): if the pool was
+        ALREADY fully exhausted by earlier complete_json() calls sharing
+        this same client instance (e.g. the 5 file-review calls burning
+        through both models before the final synthesis call even runs),
+        the while loop below never executes even once, `last_err` stays
+        at its initial None, and the function used to fall through to
+        `raise ValueError(f"...: {last_err}")` — producing the literal,
+        useless text "...without producing valid JSON: None". Confirmed
+        via a controlled reproduction: setting self._model_index to the
+        end of the pool before calling complete_json() reproduces this
+        exact string. The check below catches that case up front with an
+        actionable message instead."""
+        if self._model_index >= len(self._models):
+            raise ValueError(
+                f"LLM pool already exhausted — all {len(self._models)} model(s) configured "
+                f"for this session ({', '.join(self._models)}) were used up by earlier calls "
+                f"in this same run (daily quota and/or repeated JSON-parse failures). No "
+                f"models remain for this call; this repo's audit cannot complete on this "
+                f"provider until quotas reset or a different provider/model is configured."
+            )
+
         last_err = None
 
         while self._model_index < len(self._models):

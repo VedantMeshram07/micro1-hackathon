@@ -2,9 +2,9 @@
 
 ✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
 
-## Verdict: 5/10 — Est. 6-12 engineer-hours to acquisition-ready
+## Verdict: 3/10 — Est. 6-12 engineer-hours to acquisition-ready
 
-The repository provides a working HL7 socket server and Flask endpoint, but automated test execution fails during collection with ConnectionRefusedError and production code contains a hardcoded secret finding. Remediation is estimated at 9 total hours (range 6-12h) to address credential rotation and automated testing.
+repo_2 installs successfully but automated tests fail during collection, leaving core correctness unverified. Secret scan identified non-test credential findings in hl7_server_Production_DB.py. Total remediation cost is estimated at 9 hours (range 6-12h).
 
 ---
 
@@ -22,23 +22,23 @@ The repository provides a working HL7 socket server and Flask endpoint, but auto
 ---
 
 ## ⚠️ Risks
-- **Potential secret or credential hardcoded in non-test source file** — _Secret scan flagged a High-entropy string (possible secret) in hl7_server_Production_DB.py at line 134 (in_test_dir: false)_
-- **Automated test suite fails during collection** — _Build/test execution reported 1 error during collection in hl7_client_2_one_test.py due to ConnectionRefusedError_
-- **Tkinter GUI and socket network operations mixed in global scope** — _File review for hl7_server_Production_DB.py notes Tkinter GUI thread manipulation combined with socket network listening_
+- **Non-test secret finding in hl7_server_Production_DB.py.** — _Secret scan: file hl7_server_Production_DB.py, line 134, type High-entropy string (possible secret), in_test_dir: false._
+- **Automated tests failed during collection.** — _Build/test evidence: ERROR hl7_client_2_one_test.py - ConnectionRefusedError._
 
 ## ✅ Strengths
-- **Dependencies are declared and fully pinned** — _requirements.txt found with 3 declared packages and 0 unpinned dependencies_
-- **Demonstrates core MLLP socket parsing and framing** — _hl7_server_Production_DB.py implements explicit MLLP framing characters (SB = b'\x0b', EB = b'\x1c')_
+- **All 3 declared dependencies are pinned.** — _Dependency evidence: unpinned_count: 0, total_declared: 3, manifest_type: requirements.txt._
+- **No vulnerable dependencies detected.** — _Vulnerability scan: packages_checked: 3, vulnerable_count: 0._
 
 ## 📄 License
 - Project license: **not found**
 - Dependencies checked: 3, conflicts: 0, unknown license: 1
 
 ## 👥 Ownership & Continuity Risk
-- 1 contributor(s), top contributor: 100.0% of commits, last push: 51 days ago
+- 1 contributor(s), top contributor: 100.0% of commits, last push: 52 days ago
 
 ## ❓ Could Not Verify
-- Docker build and containerized deployment behavior, as no Dockerfile or compose configuration was present
+- Project license status because project_license found is false.
+- Container setup because has_dockerfile and has_compose are false.
 
 ---
 *Every claim above is backed by evidence in the full JSON report — this is a summary view, not a separate assessment.*

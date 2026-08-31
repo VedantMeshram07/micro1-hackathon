@@ -1,10 +1,10 @@
 # Due-Diligence Report: repo_5
 
-⚠️ *Self-audit flagged 18 finding(s) present in the underlying evidence but not reflected below — see the full JSON report for details.*
+✅ *Self-audit passed: every finding this report gathered is cited below — nothing was dropped.*
 
-## Verdict: 10/10 — Est. 20-36 engineer-hours to acquisition-ready
+## Verdict: 9/10 — Est. 20-36 engineer-hours to acquisition-ready
 
-Pydantic is a production-grade Python data validation library with extensive maintenance and clean MIT licensing, though test execution failed due to missing benchmark flags. Remediation is estimated at 28 total hours (range 20-36h) to address credential rotation in documentation files and test harness setup.
+repo_5 (Pydantic) is an actively maintained Python validation library with MIT license and 0 vulnerable packages, though test execution failed due to unrecognized pytest benchmark arguments. Secret scan identified hardcoded password findings in production and doc files including docs\concepts\serialization.md, docs\examples\secrets.md, docs\examples\validators.md. Total remediation cost is estimated at 28 hours (range 20-36h).
 
 ---
 
@@ -22,13 +22,16 @@ Pydantic is a production-grade Python data validation library with extensive mai
 ---
 
 ## ⚠️ Risks
-- **Hardcoded credentials in non-test source and documentation files** — _Secret scan flagged hardcoded password assignments in pydantic\types.py (line 1695) and docs\plugins\using.toml (line 71) with in_test_dir: false_
-- **Test execution halted due to missing benchmark CLI options** — _Build/test summary reports pytest failure on unrecognized arguments --benchmark-columns_
+- **Hardcoded credential / secret finding detected in non-test file docs\concepts\serialization.md.** — _Secret scan: file docs\concepts\serialization.md line 416 type Hardcoded value assigned to 'password' (low-entropy — not caught by randomness check) in_test_dir: false._
+- **Hardcoded credential / secret finding detected in non-test file docs\examples\secrets.md.** — _Secret scan: file docs\examples\secrets.md line 25 type Hardcoded value assigned to 'password' (low-entropy — not caught by randomness check) in_test_dir: false._
+- **Hardcoded credential / secret finding detected in non-test file docs\examples\validators.md.** — _Secret scan: file docs\examples\validators.md line 213 type Hardcoded value assigned to 'password' (low-entropy — not caught by randomness check) in_test_dir: false._
+- **Hardcoded credential / secret finding detected in non-test file docs\plugins\using.toml.** — _Secret scan: file docs\plugins\using.toml line 71 type High-entropy string (possible secret) in_test_dir: false._
+- **Hardcoded credential / secret finding detected in non-test file pydantic\types.py.** — _Secret scan: file pydantic\types.py line 1695 type Hardcoded value assigned to 'password' (low-entropy — not caught by randomness check) in_test_dir: false._
+- **Automated tests failed to run due to unrecognized test runner arguments.** — _Build/test evidence: tests_ran: false, error: unrecognized arguments: --benchmark-columns._
 
 ## ✅ Strengths
-- **Active open-source community maintenance** — _GitHub activity shows 30 open issues sampled and 18 recent merges sampled with 100 contributors_
-- **Zero dependency vulnerability findings and valid project license** — _Clean MIT license found with 0 dependency vulnerability alerts across checked packages_
-- **High code quality and static typing** — _Sampled file review for docs\plugins\conversion_table.py shows clean use of Python dataclasses and explicit type annotations_
+- **Highly active maintenance with recent commits and merges.** — _GitHub activity: days_since_last_push: 1, recent_merge_count_sampled: 18._
+- **MIT project license with no dependency license conflicts.** — _License check: project_license: {found: true, license: MIT}, conflicts: []._
 
 ## 📄 License
 - Project license: **MIT** (`LICENSE`)
@@ -38,7 +41,8 @@ Pydantic is a production-grade Python data validation library with extensive mai
 - 100 contributor(s), top contributor: 23.8% of commits, last push: 1 days ago
 
 ## ❓ Could Not Verify
-- Containerized runtime environment as no Dockerfile or Docker Compose configuration was present
+- Dependency vulnerability scan details because packages_checked was 0.
+- Container configuration because Dockerfile is absent.
 
 ---
 *Every claim above is backed by evidence in the full JSON report — this is a summary view, not a separate assessment.*

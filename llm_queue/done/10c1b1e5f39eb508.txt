@@ -1,1 +1,12 @@
-{"readability": "Imperative C++ main function sorting process arrays (`burst`, `priority`) by priority value.", "error_handling": "No input validation for non-integer process count `n` or negative burst times.", "concerns": ["Uses C-style variable length arrays (`int burst[n]`) which is a non-standard C++ extension."], "notable_strengths": ["Clear tabular output formatting printing process ID, burst time, priority, waiting, and turnaround times."]}
+{
+  "readability": "The code is concise and follows a straightforward structure for a priority scheduling simulation, using clear variable names and simple loops.",
+  "error_handling": "There is no error handling whatsoever \u2014 invalid inputs, negative burst times, or non-numeric values from cin will cause undefined behavior.",
+  "concerns": [
+    "Variable-length arrays (int burst[n], priority[n], etc.) are used with a runtime value from cin, which is a non-standard C++ extension (VLAs are not in the C++ standard) and causes undefined behavior for n <= 0 or very large n.",
+    "No input validation: if the user enters n <= 0 or a negative burst time, the program will proceed silently into undefined behavior."
+  ],
+  "notable_strengths": [
+    "The algorithm logic is correct for non-preemptive priority scheduling with all processes arriving at time 0.",
+    "Code is short and easy to follow as a learning/educational example."
+  ]
+}

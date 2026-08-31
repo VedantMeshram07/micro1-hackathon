@@ -1,0 +1,71 @@
+{
+  "score": 7,
+  "summary": "repo_6 (CoolReader) is a cross-platform C++ e-book reader with GPL-2.0 license and active maintenance. Secret scan flagged hardcoded secret findings in production files including android\\app\\build.gradle, android\\jni\\cr3java.cpp, android\\res\\layout\\catalog_edit_dialog.xml. Total remediation cost is estimated at 28 hours (range 20-36h).",
+  "strengths": [
+    {
+      "point": "GPL-2.0 project license detected.",
+      "evidence": "License check: project_license: {found: true, license: GPL-2.0}."
+    },
+    {
+      "point": "Active GitHub maintenance and contributors.",
+      "evidence": "GitHub activity: days_since_last_push: 32, contributor_count: 45."
+    }
+  ],
+  "risks": [
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\app\\build.gradle.",
+      "evidence": "Secret scan: file android\\app\\build.gradle line 40 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\jni\\cr3java.cpp.",
+      "evidence": "Secret scan: file android\\jni\\cr3java.cpp line 305 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\res\\layout\\catalog_edit_dialog.xml.",
+      "evidence": "Secret scan: file android\\res\\layout\\catalog_edit_dialog.xml line 81 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\res\\layout\\online_store_login_dialog.xml.",
+      "evidence": "Secret scan: file android\\res\\layout\\online_store_login_dialog.xml line 109 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\res\\layout\\online_store_new_account_dialog.xml.",
+      "evidence": "Secret scan: file android\\res\\layout\\online_store_new_account_dialog.xml line 108 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file android\\src\\org\\coolreader\\db\\MainDB.java.",
+      "evidence": "Secret scan: file android\\src\\org\\coolreader\\db\\MainDB.java line 547 type Hardcoded value assigned to 'password' (low-entropy \u2014 not caught by randomness check) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file cr3gui\\src\\cr3xcb.cpp.",
+      "evidence": "Secret scan: file cr3gui\\src\\cr3xcb.cpp line 119 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file crengine\\src\\pdbfmt.cpp.",
+      "evidence": "Secret scan: file crengine\\src\\pdbfmt.cpp line 712 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file thirdparty_repo\\freetype.meta.sh.",
+      "evidence": "Secret scan: file thirdparty_repo\\freetype.meta.sh line 10 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file thirdparty_repo\\fribidi.meta.sh.",
+      "evidence": "Secret scan: file thirdparty_repo\\fribidi.meta.sh line 10 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file thirdparty_repo\\harfbuzz.meta.sh.",
+      "evidence": "Secret scan: file thirdparty_repo\\harfbuzz.meta.sh line 10 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Hardcoded secret / credential finding in non-test file thirdparty_repo\\libjpeg.meta.sh.",
+      "evidence": "Secret scan: file thirdparty_repo\\libjpeg.meta.sh line 10 type High-entropy string (possible secret) in_test_dir: false."
+    },
+    {
+      "point": "Build and test checks were not supported for C++ language.",
+      "evidence": "Build/test evidence: attempted: false, reason: No deep build/test support for cpp."
+    }
+  ],
+  "unverifiable": [
+    "Dependency vulnerability and dependency license checks because no Python/npm manifest was detected."
+  ]
+}
